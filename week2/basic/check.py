@@ -39,7 +39,7 @@ def check_solution(problem_file):
     try:
         # 문제 파일 실행
         result = subprocess.run(
-            ['python3', problem_file],
+            [sys.executable, problem_file],
             capture_output=True,
             text=True,
             timeout=10
