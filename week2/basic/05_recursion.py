@@ -21,7 +21,10 @@
 - 팩토리얼: n! = n × (n-1)!, 0! = 1
 - 피보나치: fib(n) = fib(n-1) + fib(n-2), fib(0) = 0, fib(1) = 1
 """
+from function_visualizer import FunctionVisualizer 
+visualizer = FunctionVisualizer()
 
+@visualizer.visualize(param_names=["n"])
 def factorial(n):
     """
     재귀를 사용한 팩토리얼 계산
@@ -81,5 +84,5 @@ if __name__ == "__main__":
     print("=== 추가 테스트 ===")
     print(f"10! = {factorial(10)}")
     print(f"fib(15) = {fibonacci(15)}")
-
+    visualizer.render("explusive_string", "png")
 

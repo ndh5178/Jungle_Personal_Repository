@@ -21,8 +21,10 @@
 - 백트랙킹의 3단계: 선택(Choose) → 탐색(Explore) → 취소(Unchoose)
 - 현재 숫자보다 큰 숫자만 선택하여 중복 방지
 """
+from function_visualizer import FunctionVisualizer    
+visualizer = FunctionVisualizer()
 
-
+@visualizer.visualize()
 def combinations(n, k):
     """
     1부터 n까지 숫자 중 k개를 선택하는 모든 조합 찾기
@@ -104,3 +106,7 @@ if __name__ == "__main__":
     result4 = combinations(n4, k4)
     print(f"C({n4}, {k4}) = {result4}")
     print(f"총 {len(result4)}개의 조합")
+
+    result = combinations(4,2)
+
+    visualizer.render("fib", "png")
