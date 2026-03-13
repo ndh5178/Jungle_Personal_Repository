@@ -1,0 +1,2 @@
+
+            rightpointer+=1
