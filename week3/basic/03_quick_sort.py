@@ -76,7 +76,7 @@ def quick_sort_helper(arr, low, high):
     ## 피벗 오른쪽 부분 재귀 정렬
     if low>=high:
         return
-    pivot=partition(arr,low, high)
+    pivot=partition(arr,low, high),
     quick_sort_helper(arr, low, pivot-1)
     quick_sort_helper(arr, pivot+1, high)
 
