@@ -36,10 +36,6 @@ def merge(arr, left, mid, right):
     left_arr=arr[left:mid+1]
     right_arr=arr[mid+1:right+1]
     result=[]
-    pass
-    
-    # TODO: 두 배열을 병합
-    pass
     
     
     # TODO: left_arr와 right_arr를 비교하며 작은 값을 arr에 복사
@@ -52,7 +48,6 @@ def merge(arr, left, mid, right):
         else:
             result.append(right_arr[rightpointer])
             rightpointer+=1
-    pass
     
     # TODO: 남은 원소들을 복사
     # left_arr에 남은 원소가 있으면 복사
@@ -65,9 +60,10 @@ def merge(arr, left, mid, right):
         while leftpointer!=len(left_arr):
             result.append(left_arr[leftpointer])
             leftpointer+=1
+    
     for i in range(len(result)):
         arr[left+i]=result[i]
-    pass
+    
 
 
 def merge_sort_helper(arr, left, right):
