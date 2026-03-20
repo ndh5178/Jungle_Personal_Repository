@@ -34,7 +34,7 @@ def check_problem(problem_name):
     # 문제 실행
     try:
         result = subprocess.run(
-            ["python3", problem_file],
+            ["python", problem_file],
             capture_output=True,
             text=True,
             timeout=5
