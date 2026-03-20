@@ -72,8 +72,10 @@ def topological_sort(vertices, edges):
             if in_degree[i]==0:
                 queue.append(i)
     pass
-    
-    return result
+    if len(result) != vertices:
+        return "사이클이 존재합니다"
+        
+        return result
 
 # 테스트 케이스
 if __name__ == "__main__":
