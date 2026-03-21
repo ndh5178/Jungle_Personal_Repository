@@ -75,7 +75,7 @@ def topological_sort(vertices, edges):
     if len(result) != vertices:
         return "사이클이 존재합니다"
         
-        return result
+    return result
 
 # 테스트 케이스
 if __name__ == "__main__":
@@ -85,6 +85,7 @@ if __name__ == "__main__":
         (0, 1),  # 0 → 1
         (0, 2),  # 0 → 2
         (1, 3),  # 1 → 3
+        (3,0)
     ]
     
     print("=== 위상 정렬 ===")
