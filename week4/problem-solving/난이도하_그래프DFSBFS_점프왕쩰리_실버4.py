@@ -4,7 +4,7 @@ input = sys.stdin.readline
 num = int(input())
 board = []
 for i in range(num):
-    board=list(map(int,input().split()))
+    board.append(list(map(int,input().split())))
 
 visited = [[False] * num for i in range(num)]
 
