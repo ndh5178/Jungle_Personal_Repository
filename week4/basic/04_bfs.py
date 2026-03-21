@@ -44,6 +44,7 @@ def bfs(graph, start):
         방문 순서 리스트
     """
     visited = [start]
+
     
     # TODO: 큐 생성 및 시작 정점 추가
     ## 방문한 정점 집합
