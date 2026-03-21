@@ -1,1 +1,1 @@
-if visited == None:
+queue.popleft()
