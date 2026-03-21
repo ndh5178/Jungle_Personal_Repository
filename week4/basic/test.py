@@ -6,26 +6,24 @@
 #         self.right = right
 from collections import deque
 class Solution(object):
-    def averageOfLevels(self, root):
+    def maxDepth(self, root):
         """
         :type root: Optional[TreeNode]
-        :rtype: List[float]
+        :rtype: int
         """
-        result=[]
+        
         queue=deque()
         queue.append(root)
-
+        result=0
         while queue:
-            level = len(queue)
-            sum1 = 0
-            for i in range(level):
-                node = queue.popleft()
-                sum1 += node.val
-                if node.left:
-                    queue.append(node.left)
-                if node.right:
-                    queue.append(node.right)
-            avr=float(sum1) / level
-            result.append(avr)
+            count=len(queue)
+            for i in range(count):
+                x=queue.popleft()
+                if x.left:
+                    queue.append(x.left)
+                if x.right:
+                    queue.append(x.right)
+            result+=1
         return result
+
         
