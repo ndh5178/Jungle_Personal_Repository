@@ -64,7 +64,7 @@ def dfs(graph, start, visited=None):
 if __name__ == "__main__":
     # 그래프 생성
     graph = {
-        0: [1, 2],
+        0: [1, 2],          
         1: [0, 2],
         2: [0, 1, 3],
         3: [2]
