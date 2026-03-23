@@ -1,29 +1,55 @@
-# Definition for a binary tree node.
-# class TreeNode(object):
-#     def __init__(self, val=0, left=None, right=None):
-#         self.val = val
-#         self.left = left
-#         self.right = right
-from collections import deque
-class Solution(object):
-    def maxDepth(self, root):
-        """
-        :type root: Optional[TreeNode]
-        :rtype: int
-        """
-        
-        queue=deque()
-        queue.append(root)
-        result=0
-        while queue:
-            count=len(queue)
-            for i in range(count):
-                x=queue.popleft()
-                if x.left:
-                    queue.append(x.left)
-                if x.right:
-                    queue.append(x.right)
-            result+=1
-        return result
+import sys
+input = sys.stdin.readline
 
-        
+class TreeNode:
+    def __init__(self, value):
+        self.value = value
+        self.left = None
+        self.right = None
+
+nums = []
+while True:
+    try:
+        nums.append(int(input()))
+    except:
+        break
+
+root = TreeNode(nums[0])
+stack = [root]
+
+for i in range(1, len(nums)):
+    node = TreeNode(nums[i])
+
+    if nums[i] < stack[-1].value:
+        stack[-1].left = node
+        stack.append(node)
+    else:
+        parent = None
+        while stack and stack[-1].value < nums[i]:
+            parent = stack.pop()
+        parent.right = node
+        stack.append(node)
+
+def postorder_iterative(root):
+    result = []
+    stack = []
+    last_visited = None
+    current = root
+
+    while stack or current:
+        if current:
+            stack.append(current)
+            current = current.left
+        else:
+            peek = stack[-1]
+            if peek.right and last_visited != peek.right:
+                current = peek.right
+            else:
+                result.append(peek.value)
+                last_visited = stack.pop()
+
+    return result
+
+result = postorder_iterative(root)
+for x in result:
+    print(x)
