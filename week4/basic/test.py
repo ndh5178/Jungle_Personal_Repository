@@ -1,32 +1,66 @@
-# 후위 순회 - 왼쪽 -> 오른쪽 -> 루트
-# 전위 순회 - 루트 -> 왼쪽 -> 오른쪽
-# 전위로 들어올 input = 50 30 24 5 28 45 98 52 60
-import sys
-sys.setrecursionlimit(10**6)
-preorder = []
+from collections import deque
 
-# EOF까지 끝까지 읽어서 preorder에 넣는다. ctrl + D를 눌러서 EOF 표현
-for line in sys.stdin:
-    preorder.append(int(line.strip()))
+class Solution(object):
+    def snakesAndLadders(self, board):
+        """
+        :type board: List[List[int]]
+        :rtype: int
+        """
+        n = len(board)
 
-# print(preorder)
-# 큰 수가 나오면 일단 오른쪽 노드, 작은 수가 나오면 왼쪽 노드 즉, root 가 50일때 , 98부터 오른쪽 노드
+        def get_position(num):
+            row_from_bottom = (num - 1) // n
+            col = (num - 1) % n
 
-def postorder(start, end):
-    if start > end:
-        return
+            row = n - 1 - row_from_bottom
 
-    root = preorder[start]
+            if row_from_bottom % 2 == 1:
+                col = n - 1 - col
 
-    mid = end + 1
-    for i in range(start+1, end+1):
-        if preorder[i] > root:
-            mid = i
-            break
+            return row, col
 
-    postorder(start+1, mid-1)
-    postorder(mid, end)
+        visited = [False] * (n * n + 1)
+        queue = deque()
 
-    print(root)
+        queue.append((1, 0))
+        visited[1] = True
 
-postorder(0, len(preorder) - 1)
+        while queue:
+            current, count = queue.popleft()
+
+            if current == n * n:
+                return count
+
+            dice = 1
+            while dice <= 6:
+                next_num = current + dice
+
+                if next_num > n * n:
+                    break
+
+                r, c = get_position(next_num)
+
+                if board[r][c] != -1:
+                    destination = board[r][c]
+                else:
+                    destination = next_num
+
+                if visited[destination] == False:
+                    visited[destination] = True
+                    queue.append((destination, count + 1))
+
+                dice += 1
+
+        return -1
+    
+board = [
+    [-1,3,-1,-1,-1,-1],
+    [-1,1,-1,-1,-1,-1],
+    [-1,-1,-1,-1,-1,-1],
+    [-1,29,-1,-1,13,-1],
+    [-1,-1,-1,-1,-1,-1],
+    [-1,15,35,-1,-1,-1]
+]
+
+sol = Solution()
+print(sol.snakesAndLadders(board))
