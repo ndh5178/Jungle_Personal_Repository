@@ -4,7 +4,6 @@ import sys
 input=sys.stdin.readline
 
 num=list(map(str,input().split("-")))
-intnum=''
 result=0
 
 selected=0
