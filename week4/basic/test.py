@@ -1,66 +1,45 @@
-from collections import deque
+graph = {
 
-class Solution(object):
-    def snakesAndLadders(self, board):
-        """
-        :type board: List[List[int]]
-        :rtype: int
-        """
-        n = len(board)
+    'A': ['B', 'C'],
 
-        def get_position(num):
-            row_from_bottom = (num - 1) // n
-            col = (num - 1) % n
+    'B': ['D', 'E'],
 
-            row = n - 1 - row_from_bottom
+    'C': ['F'],
 
-            if row_from_bottom % 2 == 1:
-                col = n - 1 - col
+    'D': ['G'],
 
-            return row, col
+    'E': ['G'],
 
-        visited = [False] * (n * n + 1)
-        queue = deque()
+    'G': ['H'],
 
-        queue.append((1, 0))
-        visited[1] = True
+    'H': ['F'],
 
-        while queue:
-            current, count = queue.popleft()
+  }
 
-            if current == n * n:
-                return count
+def dfs(graph, start):
 
-            dice = 1
-            while dice <= 6:
-                next_num = current + dice
+    visited = []
 
-                if next_num > n * n:
-                    break
+    back_edges = set()
 
-                r, c = get_position(next_num)
+    stack = [start]
 
-                if board[r][c] != -1:
-                    destination = board[r][c]
-                else:
-                    destination = next_num
+    while stack:
 
-                if visited[destination] == False:
-                    visited[destination] = True
-                    queue.append((destination, count + 1))
+        node = stack.pop()
 
-                dice += 1
+        if node not in visited:
+            if node not in graph:
+                visited.append(node)
+                continue
+            visited.append(node)
+            stack.extend(graph[node][::-1])
+            for i in graph[node]:
+                if i not in graph:
+                    back_edges.add((node,i))
+        else:
+            continue
+    return visited, sorted(list(back_edges))
 
-        return -1
-    
-board = [
-    [-1,3,-1,-1,-1,-1],
-    [-1,1,-1,-1,-1,-1],
-    [-1,-1,-1,-1,-1,-1],
-    [-1,29,-1,-1,13,-1],
-    [-1,-1,-1,-1,-1,-1],
-    [-1,15,35,-1,-1,-1]
-]
-
-sol = Solution()
-print(sol.snakesAndLadders(board))
+x,y=dfs(graph,'A')
+print(x,y)
