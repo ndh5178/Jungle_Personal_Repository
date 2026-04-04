@@ -127,7 +127,6 @@ void moveOddItemsToBack(LinkedList *ll)
     }
 
     litail = lihead;
-    last = litail;
     lihead = ll->head;
 
     for (i = 0; i < size && lihead != NULL; i++)
@@ -142,12 +141,11 @@ void moveOddItemsToBack(LinkedList *ll)
             else
                 liprev->next = lisave->next;
 
-            if (lisave != last)
-            {
-                litail->next = lisave;
-                litail = lisave;
-                litail->next = NULL;
-            }
+            
+			litail->next = lisave;
+			litail = lisave;
+			litail->next = NULL;
+            
         }
         else
         {
