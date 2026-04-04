@@ -85,10 +85,41 @@ int main()
 
 ////////////////////////////////////////////////////////////////////////
 
+// int RecursiveReverse(ListNode **ptrHead)
+// {
+// 	/* 여기에 코드를 작성하세요 */
+// 	ListNode *newnode;
+// 	newnode=*ptrHead;
+// 	if (newnode->next == NULL){
+// 		printf("%d ", newnode->item);
+// 		return newnode->item;
+// 	}
+// 	RecursiveReverse(&(newnode->next));
+// 	printf("%d ",newnode->item);
+// 	return newnode->item;
+// }
 void RecursiveReverse(ListNode **ptrHead)
 {
-	/* 여기에 코드를 작성하세요 */
+    ListNode *first, *rest;
+
+    if (*ptrHead == NULL)
+        return;
+
+    first = *ptrHead;
+    rest = first->next;
+
+    if (rest == NULL)
+        return;
+
+    RecursiveReverse(&rest);
+
+    first->next->next = first;
+    first->next = NULL;
+    *ptrHead = rest;
 }
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////
 
