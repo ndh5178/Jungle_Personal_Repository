@@ -102,20 +102,20 @@ void RecursiveReverse(ListNode **ptrHead)
 {
     ListNode *first, *rest;
 
-    if (*ptrHead == NULL)
-        return;
+    if (*ptrHead == NULL)	// 이건 오류 방지
+        return;				
 
     first = *ptrHead;
     rest = first->next;
 
-    if (rest == NULL)
+    if (rest == NULL) // base case
         return;
 
-    RecursiveReverse(&rest);
-
+    RecursiveReverse(&rest); //재귀로 rest변수의 주소값을 준다 
+							//즉 rest변수는 함수가 생성될때마다 생기는 지역변수가 아닌 처음에 생성될때 하나만 생성된 rest변수 그 자체
     first->next->next = first;
     first->next = NULL;
-    *ptrHead = rest;
+    *ptrHead = rest; // 받아왔던 주소를 바꾸는게 아닌 주소 안에 값이 바뀐다.
 }
 
 

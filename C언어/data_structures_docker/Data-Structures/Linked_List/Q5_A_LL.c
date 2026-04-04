@@ -38,7 +38,7 @@ int removeNode(LinkedList *ll, int index);
 
 int main()
 {
-	int c, i;
+	int c=1, i;
 	LinkedList ll;
 	LinkedList resultFrontList, resultBackList;
 
@@ -102,8 +102,53 @@ int main()
 
 void frontBackSplitLinkedList(LinkedList *ll, LinkedList *resultFrontList, LinkedList *resultBackList)
 {
-	/* 여기에 코드를 작성하세요 */
+    ListNode *llhead = ll->head;
+    int size = ll->size, left, i;
+
+    if (size % 2 == 0)
+        left = size / 2;
+    else
+        left = size / 2 + 1;
+
+    resultFrontList->head = ll->head;
+    resultFrontList->size = left;
+
+    for (i = 1; i < left; i++)
+        llhead = llhead->next;
+
+    resultBackList->head = llhead->next;
+    resultBackList->size = size - left;
+    llhead->next = NULL;
 }
+
+// void frontBackSplitLinkedList(LinkedList *ll, LinkedList *resultFrontList, LinkedList *resultBackList)
+// {
+// 	/* 여기에 코드를 작성하세요 */
+// 	ListNode *llhead=ll->head,*newnode,*resultFrontListhead=resultFrontList->head,*resultBackListhead=resultBackList->head;
+// 	int size=ll->size,left,right,i;
+// 	if (size%2 == 0){
+// 		left=size/2;
+// 	}
+// 	else{
+// 		left=size/2+1;
+// 	}
+// 	for(i=0;i<left;i++){
+// 		resultFrontList->head=llhead;
+// 		resultFrontList->head=resultFrontList->head->next;
+// 		llhead=llhead->next;
+// 		resultFrontList->size++;
+// 	}
+// 	resultFrontList->head=NULL;
+
+// 	for(right=left;right<size;right++){
+// 		resultBackList->head=llhead;
+// 		resultBackList->head=resultBackList->head->next;
+// 		llhead=llhead->next;
+// 		resultBackList->size++;
+// 	}
+// 	resultBackList->head=NULL;
+	
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
