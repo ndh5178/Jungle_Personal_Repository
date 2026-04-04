@@ -1,9 +1,9 @@
-
+﻿
 //////////////////////////////////////////////////////////////////////////////////
 
 /* CE1007/CZ1007 Data Structures
 Lab Test: Section F - Binary Search Trees Questions
-Purpose: Implementing the required functions for Question 1 */
+목적: 문제 1에 필요한 함수를 구현합니다. */
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -17,23 +17,23 @@ typedef struct _bstnode{
 	int item;
 	struct _bstnode *left;
 	struct _bstnode *right;
-} BSTNode;   // You should not change the definition of BSTNode
+} BSTNode;   // BSTNode의 정의는 변경하면 안 됩니다
 
 typedef struct _QueueNode {
 	BSTNode *data;
 	struct _QueueNode *nextPtr;
-}QueueNode; // You should not change the definition of QueueNode
+}QueueNode; // QueueNode의 정의는 변경하면 안 됩니다
 
 
 typedef struct _queue
 {
 	QueueNode *head;
 	QueueNode *tail;
-}Queue; // You should not change the definition of queue
+}Queue; // queue의 정의는 변경하면 안 됩니다
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-// You should not change the prototypes of these functions
+// 이 함수들의 원형은 변경하면 안 됩니다
 void levelOrderTraversal(BSTNode *node);
 
 void insertBSTNode(BSTNode **node, int value);
@@ -50,7 +50,7 @@ int main()
 	int c, i;
 	c = 1;
 
-	//Initialize the Binary Search Tree as an empty Binary Search Tree
+	// 이진 탐색 트리를 빈 트리로 초기화
 	BSTNode *root;
 	root = NULL;
 
@@ -73,7 +73,7 @@ int main()
 			break;
 		case 2:
 			printf("The resulting level-order traversal of the binary search tree is: ");
-			levelOrderTraversal(root); // You need to code this function
+			levelOrderTraversal(root); // 이 함수는 직접 구현해야 합니다
 			printf("\n");
 			break;
 		case 0:
@@ -94,7 +94,7 @@ int main()
 void levelOrderTraversal(BSTNode* root)
 {
 
-    /* add your code here */
+    /* 여기에 코드를 작성하세요 */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -127,22 +127,22 @@ void insertBSTNode(BSTNode **node, int value){
 
 //////////////////////////////////////////////////////////////////////////////////
 
-// enqueue node
+// 노드를 큐에 삽입
 void enqueue(QueueNode **headPtr, QueueNode **tailPtr, BSTNode *node)
 {
-	// dynamically allocate memory
+	// 동적으로 메모리를 할당
 	QueueNode *newPtr = malloc(sizeof(QueueNode));
 
-	// if newPtr does not equal NULL
+	// newPtr이 NULL이 아니면
 	if (newPtr != NULL) {
 		newPtr->data = node;
 		newPtr->nextPtr = NULL;
 
-		// if queue is empty, insert at head
+		// 큐가 비어 있으면 head에 삽입
 		if (isEmpty(*headPtr)) {
 			*headPtr = newPtr;
 		}
-		else { // insert at tail
+		else { // 그렇지 않으면 tail에 삽입
 			(*tailPtr)->nextPtr = newPtr;
 		}
 
@@ -183,3 +183,4 @@ void removeAll(BSTNode **node)
 		*node = NULL;
 	}
 }
+

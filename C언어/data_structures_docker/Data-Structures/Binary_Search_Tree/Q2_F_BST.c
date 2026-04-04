@@ -1,8 +1,8 @@
-//////////////////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////////////////
 
 /* CE1007/CZ1007 Data Structures
 Lab Test: Section F - Binary Search Trees Questions
-Purpose: Implementing the required functions for Question 2 */
+목적: 문제 2에 필요한 함수를 구현합니다. */
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -15,21 +15,21 @@ typedef struct _bstnode{
 	int item;
 	struct _bstnode *left;
 	struct _bstnode *right;
-} BSTNode;   // You should not change the definition of BSTNode
+} BSTNode;   // BSTNode의 정의는 변경하면 안 됩니다
 
 typedef struct _stackNode{
 	BSTNode *data;
 	struct _stackNode *next;
-}StackNode; // You should not change the definition of StackNode
+}StackNode; // StackNode의 정의는 변경하면 안 됩니다
 
 typedef struct _stack
 {
 	StackNode *top;
-}Stack; // You should not change the definition of Stack
+}Stack; // Stack의 정의는 변경하면 안 됩니다
 
-///////////////////////// function prototypes ////////////////////////////////////
+///////////////////////// 함수 원형 선언 ////////////////////////////////////
 
-// You should not change the prototypes of these functions
+// 이 함수들의 원형은 변경하면 안 됩니다
 void inOrderTraversal(BSTNode *node);
 
 void insertBSTNode(BSTNode **node, int value);
@@ -47,7 +47,7 @@ int main()
 	int c, i;
 	c = 1;
 
-	//Initialize the Binary Search Tree as an empty Binary Search Tree
+	// 이진 탐색 트리를 빈 트리로 초기화
 	BSTNode *root;
 	root = NULL;
 
@@ -70,7 +70,7 @@ int main()
 			break;
 		case 2:
 			printf("The resulting in-order traversal of the binary search tree is: ");
-			inOrderTraversal(root); // You need to code this function
+			inOrderTraversal(root); // 이 함수는 직접 구현해야 합니다
 			printf("\n");
 			break;
 		case 0:
@@ -90,7 +90,7 @@ int main()
 
 void inOrderTraversal(BSTNode *root)
 {
-	 /* add your code here */
+	 /* 여기에 코드를 작성하세요 */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -194,3 +194,4 @@ void removeAll(BSTNode **node)
 		*node = NULL;
 	}
 }
+
