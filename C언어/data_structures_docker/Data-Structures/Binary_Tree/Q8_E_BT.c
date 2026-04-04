@@ -1,8 +1,8 @@
-//////////////////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////////////////
 
 /* CE1007/CZ1007 Data Structures
 Lab Test: Section E - Binary Trees Questions
-Purpose: Implementing the required functions for Question 8 */
+목적: 문제 8에 필요한 함수를 구현합니다. */
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@ typedef struct _btnode
     int item;
     struct _btnode *left;
     struct _btnode *right;
-} BTNode;   // You should not change the definition of BTNode
+} BTNode;   // BTNode의 정의는 변경하면 안 됩니다
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -32,9 +32,9 @@ typedef struct _stack
 } Stack;
 
 
-///////////////////////// Function prototypes ////////////////////////////////////
+///////////////////////// 함수 원형 선언 ////////////////////////////////////
 
-// You should not change the prototypes of these functions
+// 이 함수들의 원형은 변경하면 안 됩니다
 int hasGreatGrandchild(BTNode *node);
 
 BTNode *createBTNode(int item);
@@ -102,7 +102,7 @@ int main()
 
 int hasGreatGrandchild(BTNode *node)
 {
-	/* add your code here */
+	/* 여기에 코드를 작성하세요 */
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -230,4 +230,5 @@ void removeAll(BTNode **node)
         *node = NULL;
     }
 }
+
 
