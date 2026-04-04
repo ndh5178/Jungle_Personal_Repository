@@ -84,9 +84,77 @@ int main()
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// void moveOddItemsToBack(LinkedList *ll)
+// {
+//     ListNode *lihead = ll->head, *lisave, *liprev = NULL;
+//     int i, size = ll->size;
+
+//     for (i = 0; i < size && lihead != NULL; i++)
+//     {
+//         if (lihead->item % 2 == 1)
+//         {
+//             insertNode(ll, ll->size, lihead->item);
+//             ll->size--;
+
+//             lisave = lihead;
+
+//             if (liprev == NULL)
+//                 ll->head = lihead->next;
+//             else
+//                 liprev->next = lihead->next;
+
+//             lihead = lihead->next;
+//             free(lisave);
+//         }
+//         else
+//         {
+//             liprev = lihead;
+//             lihead = lihead->next;
+//         }
+//     }
+// }
 void moveOddItemsToBack(LinkedList *ll)
 {
-	/* 여기에 코드를 작성하세요 */
+    ListNode *lihead = ll->head, *lisave, *liprev = NULL, *litail = NULL, *last = NULL;
+    int i, size = ll->size;
+
+    if (ll == NULL || ll->head == NULL)
+        return;
+
+    while (lihead->next != NULL)
+    {
+        lihead = lihead->next;
+    }
+
+    litail = lihead;
+    last = litail;
+    lihead = ll->head;
+
+    for (i = 0; i < size && lihead != NULL; i++)
+    {
+        if (lihead->item % 2 == 1)
+        {
+            lisave = lihead;
+            lihead = lihead->next;
+
+            if (liprev == NULL)
+                ll->head = lisave->next;
+            else
+                liprev->next = lisave->next;
+
+            if (lisave != last)
+            {
+                litail->next = lisave;
+                litail = lisave;
+                litail->next = NULL;
+            }
+        }
+        else
+        {
+            liprev = lihead;
+            lihead = lihead->next;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
