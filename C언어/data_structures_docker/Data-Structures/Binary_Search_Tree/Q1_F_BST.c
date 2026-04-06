@@ -108,7 +108,6 @@ void levelOrderTraversal(BSTNode* root)
 		if(save->right!=NULL){
 			enqueue(&head,&tail,save->right);
 		}
-		
 	}
 	
 
