@@ -95,9 +95,19 @@ int main()
 //////////////////////////////////////////////////////////////////////////////////
 
 int maxHeight(BTNode *node)
-
 {
-    /* 여기에 코드를 작성하세요 */
+    int lcount=-1,rcount=-1;
+    if (node == NULL){
+        return 0;
+    }
+    lcount=lcount+maxHeight(node->left)+1;
+    rcount=rcount+maxHeight(node->right)+1;
+    if(lcount>rcount){
+        return lcount;
+    }
+    else{
+        return rcount;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
