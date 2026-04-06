@@ -88,11 +88,36 @@ int main()
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// void inOrderTraversal(BSTNode *root)
+// {
+// 	 /* 여기에 코드를 작성하세요 */
+// 	 if(root==NULL){
+// 		return;
+// 	 }
+// 	 inOrderTraversal(root->left);
+// 	 printf("%d, ",root->item);
+// 	 inOrderTraversal(root->right);
+// }
 void inOrderTraversal(BSTNode *root)
 {
-	 /* 여기에 코드를 작성하세요 */
-}
+    Stack stack;
+    BSTNode *save = root;
 
+    stack.top = NULL;
+
+    while (save != NULL || !isEmpty(&stack))
+    {
+        while (save != NULL)
+        {
+            push(&stack, save);
+            save = save->left;
+        }
+
+        save = pop(&stack);
+        printf("%d ", save->item);
+        save = save->right;
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 void insertBSTNode(BSTNode **node, int value){
