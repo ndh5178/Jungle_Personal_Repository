@@ -111,7 +111,17 @@ int main()
 
 void removeUntil(Stack *s, int value)
 {
-/* 여기에 코드를 작성하세요 */
+	int stackint;
+
+    while (!isEmptyStack(s))
+    {
+        stackint = pop(s);
+        if (stackint == value)
+        {
+            push(s, stackint);
+            break;
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////
