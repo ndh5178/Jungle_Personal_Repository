@@ -84,7 +84,7 @@ int main()
 			scanf("%s", str);
 			break;
         case 2:
-            if(balanced(str))
+            if(!balanced(str))
                 printf("not balanced!\n");
             else
                 printf("balanced!\n");
@@ -104,7 +104,49 @@ int main()
 ////////////////////////////////////////////////////////////
 int balanced(char *expression)
 {
-/* 여기에 코드를 작성하세요 */
+	Stack newstack;
+    int i = 0;
+    char ch, topchar;
+
+    newstack.ll.head = NULL;
+    newstack.ll.size = 0;
+
+    while (expression[i] != '\0')
+    {
+        ch = expression[i];
+
+        if (ch == '(' || ch == '[' || ch == '{')
+        {
+            push(&newstack, ch);
+        }
+        else if (ch == ')' || ch == ']' || ch == '}')
+        {
+            if (isEmptyStack(&newstack))
+            {
+                return 0;
+            }
+
+            topchar = pop(&newstack);
+
+            if ((ch == ')' && topchar != '(') ||
+                (ch == ']' && topchar != '[') ||
+                (ch == '}' && topchar != '{'))
+            {
+                return 0;
+            }
+        }
+
+        i++;
+    }
+
+    if (isEmptyStack(&newstack))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////
