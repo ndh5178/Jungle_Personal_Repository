@@ -8,6 +8,7 @@ Lab Test: Section E - Binary Trees Questions
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -103,6 +104,19 @@ int main()
 int smallestValue(BTNode *node)
 {
 	/* 여기에 코드를 작성하세요 */
+    int left,right,save;
+    if (node == NULL)
+        return INT_MAX;
+    left = smallestValue(node->left);
+    right = smallestValue(node->right);
+    if(left>right){
+        if(right<node->item){return right;}
+        else{return node->item;}
+    }
+    else{
+        if(left<node->item){return left;}
+        else{return node->item;}
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////
