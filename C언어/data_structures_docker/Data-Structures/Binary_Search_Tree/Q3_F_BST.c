@@ -92,6 +92,20 @@ int main()
 void preOrderIterative(BSTNode *root)
 {
 	 /* 여기에 코드를 작성하세요 */
+	 Stack stat;
+	 BSTNode *save=root;
+	 stat.top=NULL;
+	 while (save!=NULL||!isEmpty(&stat))
+	 {
+		while (save!=NULL)
+		{
+			printf("%d ",save->item);
+			push(&stat,save);
+			save=save->left;
+		}
+		save=pop(&stat);
+		save=save->right;
+	 }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
