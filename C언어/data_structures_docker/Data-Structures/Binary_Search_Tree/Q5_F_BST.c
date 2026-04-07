@@ -91,14 +91,73 @@ int main()
 
 void postOrderIterativeS2(BSTNode *root)
 {
-	 /* 여기에 코드를 작성하세요 */
+	Stack stat,sstac;
+    BSTNode *popnode;
+    stat.top = NULL;
+	sstac.top = NULL;
+	push(&stat, root);
+    while (!isEmpty(&stat))
+    {
+		popnode=pop(&stat);
+		push(&sstac, popnode);
+        if (popnode->left != NULL){
+			push(&stat, popnode->left);
+		}
+        if (popnode->right != NULL){
+			push(&stat, popnode->right);
+		}
+            
+    }
+	while (!isEmpty(&sstac))
+    {
+		printf("%d ",pop(&sstac)->item);
+    }
+
 }
 
 /* 이 함수는 이진 탐색 트리와 키를 받아
    deletes the key and returns the new root. Make recursive function. */
 BSTNode* removeNodeFromTree(BSTNode *root, int value)
 {
-	/* 여기에 코드를 작성하세요 */
+    BSTNode *save;
+
+    if (root == NULL) {
+        return NULL;
+    }
+
+    if (value < root->item) {
+        root->left = removeNodeFromTree(root->left, value);
+    }
+    else if (value > root->item) {
+        root->right = removeNodeFromTree(root->right, value);
+    }
+    else {
+        if (root->left == NULL && root->right == NULL) {
+            free(root);
+            return NULL;
+        }
+        else if (root->left != NULL && root->right == NULL) {
+            save = root->left;
+            free(root);
+            return save;
+        }
+        else if (root->left == NULL && root->right != NULL) {
+            save = root->right;
+            free(root);
+            return save;
+        }
+        else {
+            save = root->left;
+            while (save->right != NULL) {
+                save = save->right;
+            }
+
+            root->item = save->item;
+            root->left = removeNodeFromTree(root->left, save->item);
+        }
+    }
+
+    return root;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
