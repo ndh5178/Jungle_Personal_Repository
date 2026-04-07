@@ -91,7 +91,33 @@ int main()
 
 void postOrderIterativeS1(BSTNode *root)
 {
-	 /* 여기에 코드를 작성하세요 */
+    Stack stat;
+    BSTNode *save = root;
+    BSTNode *toppeek;
+    BSTNode *last = NULL;
+
+    stat.top = NULL;
+
+    while (save != NULL || !isEmpty(&stat))
+    {
+        while (save != NULL)
+        {
+            push(&stat, save);
+            save = save->left;
+        }
+
+        toppeek = peek(&stat);
+
+        if (toppeek->right != NULL && last != toppeek->right)
+        {
+            save = toppeek->right;
+        }
+        else
+        {
+            printf("%d ", toppeek->item);
+            last = pop(&stat);
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
