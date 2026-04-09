@@ -1,0 +1,1 @@
+    update1(p); printf("%d\n", x); 
