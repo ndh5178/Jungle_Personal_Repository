@@ -1,0 +1,39 @@
+4 How to Work on the Lab
+Your dynamic storage allocator will consist of the followin g four functions, which are declared in mm.h
+and deﬁned inmm.c.
+int mm_init(void);
+void *mm_malloc(size_t size);
+void mm_free(void *ptr);
+void *mm_realloc(void *ptr, size_t size);
+Themm.c ﬁle we have given you implements the simplest but still functionally correct malloc package that
+we could think of. Using this as a starting place, modify thes e functions (and possibly deﬁne other private
+static functions), so that they obey the following semantics:
+• mm
+init: Before calling mm malloc mmrealloc or mm free, the application program (i.e.,
+the trace-driven driver program that you will use to evaluate your implementation) calls mm init to
+perform any necessary initializations, such as allocating the initial heap area. The return value should
+be -1 if there was a problem in performing the initialization, 0 otherwise.
+• mm malloc: The mm malloc routine returns a pointer to an allocated block payload of at least
+size bytes. The entire allocated block should lie within the heap region and should not overlap with
+any other allocated chunk.
+We will comparing your implementation to the version ofmalloc supplied in the standard C library
+(libc). Since the libc malloc always returns payload pointers that are aligned to 8 bytes, your
+malloc implementation should do likewise and always return 8-byte aligned pointers.
+• mm
+free: The mm free routine frees the block pointed to by ptr. It returns nothing. This rou-
+tine is only guaranteed to work when the passed pointer ( ptr) was returned by an earlier call to
+mm malloc ormm realloc and has not yet been freed.
+• mm realloc: Themm realloc routine returns a pointer to an allocated region of at least size
+bytes with the following constraints.
+– ifptr is NULL, the call is equivalent tomm malloc(size);
+– ifsize is equal to zero, the call is equivalent tomm free(ptr);
+– ifptr is not NULL, it must have been returned by an earlier call tomm malloc ormm realloc.
+The call to mm realloc changes the size of the memory block pointed to by ptr (the old
+block) to size bytes and returns the address of the new block. Notice that th e address of the
+new block might be the same as the old block, or it might be different, depending on your imple-
+mentation, the amount of internal fragmentation in the old block, and the size of the realloc
+request.
+The contents of the new block are the same as those of the oldptr block, up to the minimum of
+the old and new sizes. Everything else is uninitialized. For example, if the old block is 8 bytes
+and the new block is 12 bytes, then the ﬁrst 8 bytes of the new bl ock are identical to the ﬁrst 8
+2

@@ -1,0 +1,33 @@
+bytes of the old block and the last 4 bytes are uninitialized. Similarly, if the old block is 8 bytes
+and the new block is 4 bytes, then the contents of the new block are identical to the ﬁrst 4 bytes
+of the old block.
+These semantics match the the semantics of the corresponding libcmalloc ,realloc, andfree rou-
+tines. Typeman malloc to the shell for complete documentation.
+5 Heap Consistency Checker
+Dynamic memory allocators are notoriously tricky beasts to program correctly and efﬁciently. They are
+difﬁcult to program correctly because they involve a lot of u ntyped pointer manipulation. You will ﬁnd it
+very helpful to write a heap checker that scans the heap and checks it for consistency.
+Some examples of what a heap checker might check are:
+• Is every block in the free list marked as free?
+• Are there any contiguous free blocks that somehow escaped coalescing?
+• Is every free block actually in the free list?
+• Do the pointers in the free list point to valid free blocks?
+• Do any allocated blocks overlap?
+• Do the pointers in a heap block point to valid heap addresses?
+Your heap checker will consist of the functionint mm
+check(void) inmm.c. It will check any invari-
+ants or consistency conditions you consider prudent. It ret urns a nonzero value if and only if your heap is
+consistent. You are not limited to the listed suggestions no r are you required to check all of them. You are
+encouraged to print out error messages whenmm check fails.
+This consistency checker is for your own debugging during de velopment. When you submit mm.c, make
+sure to remove any calls to mm check as they will slow down your throughput. Style points will be g iven
+for yourmm check function. Make sure to put in comments and document what you are checking.
+6 Support Routines
+The memlib.c package simulates the memory system for your dy namic memory allocator. You can invoke
+the following functions inmemlib.c:
+• void *mem
+sbrk(int incr): Expands the heap by incr bytes, where incr is a positive
+non-zero integer and returns a generic pointer to the ﬁrst by te of the newly allocated heap area. The
+semantics are identical to the Unix sbrk function, except that mem sbrk accepts only a positive
+non-zero integer argument.
+3

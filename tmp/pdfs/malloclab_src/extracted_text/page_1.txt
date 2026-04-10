@@ -1,0 +1,25 @@
+CS 213, Fall 2001
+Malloc Lab: Writing a Dynamic Storage Allocator
+Assigned: Friday Nov. 2, Due: Tuesday Nov. 20, 11:59PM
+Cory Williams (cgw@andrew.cmu.edu) is the lead person for this assignment.
+1 Introduction
+In this lab you will be writing a dynamic storage allocator fo r C programs, i.e., your own version of the
+malloc, free and realloc routines. You are encouraged to explore the design space cre atively and
+implement an allocator that is correct, efﬁcient and fast.
+2 Logistics
+You may work in a group of up to two people. Any clariﬁcations a nd revisions to the assignment will be
+posted on the course Web page.
+3 Hand Out Instructions
+SITE-SPECIFIC: Insert a paragraph here that explains how st udents should download
+themalloclab-handout.tar ﬁle.
+Start by copying malloclab-handout.tar to a protected directory in which you plan to do your
+work. Then give the command: tar xvf malloclab-handout.tar. This will cause a number of
+ﬁles to be unpacked into the directory. The only ﬁle you will b e modifying and handing in is mm.c. The
+mdriver.c program is a driver program that allows you to evaluate the performance of your solution. Use
+the command make to generate the driver code and run it with the command ./mdriver -V. (The -V
+ﬂag displays helpful summary information.)
+Looking at the ﬁle mm.c you’ll notice a C structure team into which you should insert the requested
+identifying information about the one or two individuals comprising your programming team. Do this right
+away so you don’t forget.
+When you have completed the lab, you will hand in only one ﬁle (mm.c), which contains your solution.
+1

@@ -1,0 +1,39 @@
+• For consistency with thelibcmalloc package, which returns blocks aligned on 8-byte boundaries,
+your allocator must always return pointers that are aligned to 8-byte boundaries. The driver will
+enforce this requirement for you.
+9 Evaluation
+You will receive zero points if you break any of the rules or your code is buggy and crashes t he driver.
+Otherwise, your grade will be calculated as follows:
+• Correctness (20 points). You will receive full points if your solution passes the corr ectness tests
+performed by the driver program. You will receive partial credit for each correct trace.
+• Performance (35 points). Two performance metrics will be used to evaluate your solution:
+– Space utilization: The peak ratio between the aggregate amount of memory used b y the driver
+(i.e., allocated via mm
+malloc or mm realloc but not yet freed via mm free) and the size
+of the heap used by your allocator. The optimal ratio equals to 1. You should ﬁnd good policies
+to minimize fragmentation in order to make this ratio as close as possible to the optimal.
+– Throughput: The average number of operations completed per second.
+The driver program summarizes the performance of your allocator by computing aperformance index,
+P , which is a weighted sum of the space utilization and throughput
+P = wU + (1 − w) min
+(
+1, T
+Tlibc
+)
+where U is your space utilization, T is your throughput, and Tlibc is the estimated throughput oflibc
+malloc on your system on the default traces. 1 The performance index favors space utilization over
+throughput, with a default of w = 0.6.
+Observing that both memory and CPU cycles are expensive system resources, we adopt this formula to
+encourage balanced optimization of both memory utilization and throughput. Ideally, the performance
+index will reach P = w + (1 − w) = 1 or 100%. Since each metric will contribute at most w and
+1 − w to the performance index, respectively, you should not go to extremes to optimize either the
+memory utilization or the throughput only. To receive a good score, you must achieve a balance
+between utilization and throughput.
+• Style (10 points).
+– Your code should be decomposed into functions and use as few global variables as possible.
+– Your code should begin with a header comment that describes t he structure of your free and
+allocated blocks, the organization of the free list, and how your allocator manipulates the free
+list. each function should be preceeded by a header comment t hat describes what the function
+does.
+1The value for Tlibc is a constant in the driver (600 Kops/s) that your instructor established when they conﬁgured the program.
+5

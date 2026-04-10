@@ -1,0 +1,32 @@
+– Each subroutine should have a header comment that describes what it does and how it does it.
+– Your heap consistency checkermm check should be thorough and well-documented.
+You will be awarded 5 points for a good heap consistency check er and 5 points for good program
+structure and comments.
+10 Handin Instructions
+SITE-SPECIFIC: Insert a paragraph here that explains how the students should hand in
+their solutionmm.c ﬁles.
+11 Hints
+• Use themdriver-f option. During initial development, using tiny trace ﬁles will simplify debug-
+ging and testing. We have included two such trace ﬁles (short1,2-bal.rep) that you can use for
+initial debugging.
+• Use the mdriver -vand -V options. The -v option will give you a detailed summary for each
+trace ﬁle. The -V will also indicate when each trace ﬁle is read, which will help you isolate errors.
+• Compile with gcc -g and use a debugger. A debugger will help you isolate and identify out of
+bounds memory references.
+• Understand every line of the malloc implementation in the te xtbook. The textbook has a detailed
+example of a simple allocator based on an implicit free list. Use this is a point of departure. Don’t
+start working on your allocator until you understand everything about the simple implicit list allocator.
+• Encapsulate your pointer arithmetic in C preprocessor macr os. Pointer arithmetic in memory man-
+agers is confusing and error-prone because of all the castin g that is necessary. You can reduce the
+complexity signiﬁcantly by writing macros for your pointer operations. See the text for examples.
+• Do your implementation in stages. The ﬁrst 9 traces contain requests to malloc and free. The
+last 2 traces contain requests for realloc,malloc, and free. We recommend that you start by
+getting yourmalloc andfree routines working correctly and efﬁciently on the ﬁrst 9 traces. Only
+then should you turn your attention to the realloc implementation. For starters, build realloc
+on top of your existing malloc and free implementations. But to get really good performance,
+you will need to build a stand-alonerealloc.
+• Use a proﬁler. You may ﬁnd thegprof tool helpful for optimizing performance.
+• Start early! It is possible to write an efﬁcient malloc package with a few pages of code. However, we
+can guarantee that it will be some of the most difﬁcult and sophisticated code you have written so far
+in your career. So start early, and good luck!
+6
