@@ -1,0 +1,31 @@
+• void *mem heap lo(void): Returns a generic pointer to the ﬁrst byte in the heap.
+• void *mem heap hi(void): Returns a generic pointer to the last byte in the heap.
+• size t mem heapsize(void): Returns the current size of the heap in bytes.
+• size t mem pagesize(void): Returns the system’s page size in bytes (4K on Linux systems).
+7 The Trace-driven Driver Program
+The driver programmdriver.c in themalloclab-handout.tar distribution tests yourmm.c pack-
+age for correctness, space utilization, and throughput. The driver program is controlled by a set oftrace ﬁles
+that are included in the malloclab-handout.tar distribution. Each trace ﬁle contains a sequence of
+allocate, reallocate, and free directions that instruct the driver to call yourmm
+malloc,mm realloc, and
+mm free routines in some sequence. The driver and the trace ﬁles are the same ones we will use when we
+grade your handinmm.c ﬁle.
+The drivermdriver.c accepts the following command line arguments:
+• -t <tracedir>: Look for the default trace ﬁles in directory tracedir instead of the default
+directory deﬁned inconfig.h.
+• -f <tracefile>: Use one particular tracefile for testing instead of the default set of trace-
+ﬁles.
+• -h: Print a summary of the command line arguments.
+• -l: Run and measure libc malloc in addition to the student’s malloc package.
+• -v: Verbose output. Print a performance breakdown for each traceﬁle in a compact table.
+• -V: More verbose output. Prints additional diagnostic inform ation as each trace ﬁle is processed.
+Useful during debugging for determining which trace ﬁle is causing your malloc package to fail.
+8 Programming Rules
+• You should not change any of the interfaces inmm.c.
+• You should not invoke any memory-management related library calls or system calls. This excludes
+the use of malloc,calloc,free,realloc,sbrk,brk or any variants of these calls in your
+code.
+• You are not allowed to deﬁne any global orstatic compound data structures such as arrays, structs,
+trees, or lists in yourmm.c program. However, youare allowed to declare global scalar variables such
+as integers, ﬂoats, and pointers inmm.c.
+4

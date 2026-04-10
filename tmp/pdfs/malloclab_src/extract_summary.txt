@@ -1,0 +1,6 @@
+page 1: chars=1619
+page 2: chars=2680
+page 3: chars=2229
+page 4: chars=2122
+page 5: chars=2622
+page 6: chars=2419
