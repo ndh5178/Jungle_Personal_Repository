@@ -170,7 +170,6 @@ int main(int argc, char **argv)
 	 */
 	while ((c = getopt(argc, argv, "f:t:hvVgal")) != EOF)
 	{
-		printf("getopt returned: %d\n", c); // 디버깅용 출력 추가
 
 		switch (c)
 		{
@@ -221,27 +220,27 @@ int main(int argc, char **argv)
 		/* Students must fill in their team information */
 		if (!strcmp(team.teamname, ""))
 		{
-			printf("ERROR: Please provide the information about your team in mm.c.\n");
+			printf("오류: mm.c에 팀 정보를 입력해 주세요.\n");
 			exit(1);
 		}
 		else
-			printf("Team Name:%s\n", team.teamname);
+			printf("팀 이름: %s\n", team.teamname);
 		if ((*team.name1 == '\0') || (*team.id1 == '\0'))
 		{
-			printf("ERROR.  You must fill in all team member 1 fields!\n");
+			printf("오류: 팀원 1 정보를 모두 입력해야 합니다.\n");
 			exit(1);
 		}
 		else
-			printf("Member 1 :%s:%s\n", team.name1, team.id1);
+			printf("팀원 1: %s:%s\n", team.name1, team.id1);
 
 		if (((*team.name2 != '\0') && (*team.id2 == '\0')) ||
 			((*team.name2 == '\0') && (*team.id2 != '\0')))
 		{
-			printf("ERROR.  You must fill in all or none of the team member 2 ID fields!\n");
+			printf("오류: 팀원 2 정보는 모두 입력하거나 모두 비워야 합니다.\n");
 			exit(1);
 		}
 		else if (*team.name2 != '\0')
-			printf("Member 2 :%s:%s\n", team.name2, team.id2);
+			printf("팀원 2: %s:%s\n", team.name2, team.id2);
 	}
 
 	/*
@@ -252,7 +251,7 @@ int main(int argc, char **argv)
 	{
 		tracefiles = default_tracefiles;
 		num_tracefiles = sizeof(default_tracefiles) / sizeof(char *) - 1;
-		printf("Using default tracefiles in %s\n", tracedir);
+		printf("기본 트레이스 파일 경로 사용: %s\n", tracedir);
 	}
 
 	/* Initialize the timing package */
@@ -264,7 +263,7 @@ int main(int argc, char **argv)
 	if (run_libc)
 	{
 		if (verbose > 1)
-			printf("\nTesting libc malloc\n");
+			printf("\nlibc malloc 테스트 중\n");
 
 		/* Allocate libc stats array, with one stats_t struct per tracefile */
 		libc_stats = (stats_t *)calloc(num_tracefiles, sizeof(stats_t));
@@ -277,13 +276,13 @@ int main(int argc, char **argv)
 			trace = read_trace(tracedir, tracefiles[i]);
 			libc_stats[i].ops = trace->num_ops;
 			if (verbose > 1)
-				printf("Checking libc malloc for correctness, ");
+				printf("libc malloc의 정확성을 확인하고, ");
 			libc_stats[i].valid = eval_libc_valid(trace, i);
 			if (libc_stats[i].valid)
 			{
 				speed_params.trace = trace;
 				if (verbose > 1)
-					printf("and performance.\n");
+					printf("성능을 측정합니다.\n");
 				libc_stats[i].secs = fsecs(eval_libc_speed, &speed_params);
 			}
 			free_trace(trace);
@@ -292,7 +291,7 @@ int main(int argc, char **argv)
 		/* Display the libc results in a compact table */
 		if (verbose)
 		{
-			printf("\nResults for libc malloc:\n");
+			printf("\nlibc malloc 결과:\n");
 			printresults(num_tracefiles, libc_stats);
 		}
 	}
@@ -301,7 +300,7 @@ int main(int argc, char **argv)
 	 * Always run and evaluate the student's mm package
 	 */
 	if (verbose > 1)
-		printf("\nTesting mm malloc\n");
+		printf("\nmm malloc 테스트 중\n");
 
 	/* Allocate the mm stats array, with one stats_t struct per tracefile */
 	mm_stats = (stats_t *)calloc(num_tracefiles, sizeof(stats_t));
@@ -317,17 +316,17 @@ int main(int argc, char **argv)
 		trace = read_trace(tracedir, tracefiles[i]);
 		mm_stats[i].ops = trace->num_ops;
 		if (verbose > 1)
-			printf("Checking mm_malloc for correctness, ");
+			printf("mm_malloc의 정확성을 확인하고, ");
 		mm_stats[i].valid = eval_mm_valid(trace, i, &ranges);
 		if (mm_stats[i].valid)
 		{
 			if (verbose > 1)
-				printf("efficiency, ");
+				printf("메모리 활용도를 계산하고, ");
 			mm_stats[i].util = eval_mm_util(trace, i, &ranges);
 			speed_params.trace = trace;
 			speed_params.ranges = ranges;
 			if (verbose > 1)
-				printf("and performance.\n");
+				printf("성능을 측정합니다.\n");
 			mm_stats[i].secs = fsecs(eval_mm_speed, &speed_params);
 		}
 		free_trace(trace);
@@ -336,7 +335,7 @@ int main(int argc, char **argv)
 	/* Display the mm results in a compact table */
 	if (verbose)
 	{
-		printf("\nResults for mm malloc:\n");
+		printf("\nmm malloc 결과:\n");
 		printresults(num_tracefiles, mm_stats);
 		printf("\n");
 	}
@@ -377,7 +376,7 @@ int main(int argc, char **argv)
 		}
 
 		perfindex = (p1 + p2) * 100.0;
-		printf("Perf index = %.0f (util) + %.0f (thru) = %.0f/100\n",
+		printf("성능 지수 = %.0f (활용도) + %.0f (처리량) = %.0f/100\n",
 			   p1 * 100,
 			   p2 * 100,
 			   perfindex);
@@ -385,7 +384,7 @@ int main(int argc, char **argv)
 	else
 	{ /* There were errors */
 		perfindex = 0.0;
-		printf("Terminated with %d errors\n", errors);
+		printf("오류 %d개로 실행이 중단되었습니다.\n", errors);
 	}
 
 	if (autograder)
@@ -519,7 +518,7 @@ static trace_t *read_trace(char *tracedir, char *filename)
 	unsigned op_index;
 
 	if (verbose > 1)
-		printf("Reading tracefile: %s\n", filename);
+		printf("트레이스 파일 읽는 중: %s\n", filename);
 
 	/* Allocate the trace record */
 	if ((trace = (trace_t *)malloc(sizeof(trace_t))) == NULL)
@@ -976,13 +975,13 @@ static void printresults(int n, stats_t *stats)
 	double util = 0;
 
 	/* Print the individual results for each trace */
-	printf("%5s%7s %5s%8s%10s%6s\n",
-		   "trace", " valid", "util", "ops", "secs", "Kops");
+	printf("%5s%7s %7s%8s%10s%6s\n",
+		   "trace", " valid", "util(%)", "ops", "secs", "Kops");
 	for (i = 0; i < n; i++)
 	{
 		if (stats[i].valid)
 		{
-			printf("%2d%10s%5.0f%%%8.0f%10.6f%6.0f\n",
+			printf("%2d%10s%7.0f%8.0f%10.6f%6.0f\n",
 				   i,
 				   "yes",
 				   stats[i].util * 100.0,
@@ -995,7 +994,7 @@ static void printresults(int n, stats_t *stats)
 		}
 		else
 		{
-			printf("%2d%10s%6s%8s%10s%6s\n",
+			printf("%2d%10s%7s%8s%10s%6s\n",
 				   i,
 				   "no",
 				   "-",
@@ -1008,8 +1007,8 @@ static void printresults(int n, stats_t *stats)
 	/* Print the aggregate results for the set of traces */
 	if (errors == 0)
 	{
-		printf("%12s%5.0f%%%8.0f%10.6f%6.0f\n",
-			   "Total       ",
+		printf("%12s%7.0f%8.0f%10.6f%6.0f\n",
+			   "합계",
 			   (util / n) * 100.0,
 			   ops,
 			   secs,
@@ -1017,8 +1016,8 @@ static void printresults(int n, stats_t *stats)
 	}
 	else
 	{
-		printf("%12s%6s%8s%10s%6s\n",
-			   "Total       ",
+		printf("%12s%7s%8s%10s%6s\n",
+			   "합계",
 			   "-",
 			   "-",
 			   "-",
@@ -1050,7 +1049,7 @@ void unix_error(char *msg)
 void malloc_error(int tracenum, int opnum, char *msg)
 {
 	errors++;
-	printf("ERROR [trace %d, line %d]: %s\n", tracenum, LINENUM(opnum), msg);
+	printf("오류 [trace %d, line %d]: %s\n", tracenum, LINENUM(opnum), msg);
 }
 
 /*
