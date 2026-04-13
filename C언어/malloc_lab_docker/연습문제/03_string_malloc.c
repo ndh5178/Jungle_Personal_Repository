@@ -46,7 +46,10 @@ int main(void) {
     char *str = NULL;
 
     /* TODO: str에 len+1 크기의 char 배열을 동적 할당하세요 */
-    str = /* ??? */;
+    //질문:
+    //+1을 하는이유: 문자열에서 끝났다고 찾는 신호는 \0이다 근데 우리눈에 안보이고 숫자를 세는 함수에도 걸리지않는다 하지만 항상 있고 그 값도 배정을 해줘야한다
+    //그러면 13개만 늘리고 값을 저장하면 과연 어떻게 될까?
+    str = malloc(sizeof(typeof(str))*(len+1));
 
     if (str == NULL) {
         printf("메모리 할당 실패!\n");
@@ -64,7 +67,10 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: original의 내용을 str에 복사하세요 */
-    /* ??? */
+    for(int i=0;i<len+1;i++)
+    {
+        str[i]=original[i];
+    }
 
     printf("복사된 문자열: %s\n", str);
     printf("문자열 길이: %d\n", (int)strlen(str));
@@ -80,7 +86,7 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: str의 첫 번째 문자를 'h'로 바꾸세요 */
-    /* ??? */
+    str[0]='h';
 
     printf("수정된 문자열: %s\n", str);
 
@@ -99,8 +105,8 @@ int main(void) {
     char *combined = NULL;
 
     /* TODO: combined에 new_len + 1 크기의 공간을 할당하세요 */
-    combined = /* ??? */;
-
+    combined = malloc(sizeof(typeof(combined))*(new_len+1));
+    
     if (combined == NULL) {
         free(str);
         printf("메모리 할당 실패!\n");
@@ -109,10 +115,13 @@ int main(void) {
 
     /* TODO: str을 combined에 복사하고, suffix를 이어붙이세요 */
     /* 힌트: strcpy 후 strcat 사용 */
-    /* ??? */
-    /* ??? */
-
+    strcpy(combined, str);
+    strcat(combined,suffix);
     printf("이어붙인 문자열: %s\n", combined);
+
+    // str=realloc(str,new_len+1);
+    // strcat(str,suffix);
+    // printf("이어붙인 문자열: %s\n", str);
 
     /* -------------------------------------------------------
      * [문제 3-5] 모든 동적 할당 메모리 해제
@@ -122,11 +131,11 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: str과 combined를 free하고 NULL로 초기화하세요 */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-
+    //질문: 그러면 왜 NULL을 하냐 그리고 free를 안 하고 프로그램이 종료되면 과연 메모리는 남았고 다시 시작해서 그 주소에 접근하면 값이 남아있을까?
+    free(str);
+    free(combined);
+    str=NULL;
+    combined=NULL;
     printf("메모리 해제 완료\n");
     return 0;
 }

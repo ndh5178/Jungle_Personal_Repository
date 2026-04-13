@@ -39,7 +39,7 @@
 
 int main(void) {
 
-    int rows = 3, cols = 4;
+    int rows = 5, cols = 4;
 
     /* -------------------------------------------------------
      * [문제 4-1] 행 포인터 배열 할당
@@ -53,7 +53,8 @@ int main(void) {
     int **matrix = NULL;
 
     /* TODO: matrix에 행 포인터 배열을 할당하세요 */
-    matrix = /* ??? */;
+    //잘못된 값을 할당하면 어떻게 되는지
+    matrix = malloc(sizeof(int*) * rows);
 
     if (matrix == NULL) {
         printf("행 포인터 배열 할당 실패!\n");
@@ -70,7 +71,7 @@ int main(void) {
      * ------------------------------------------------------- */
     for (int i = 0; i < rows; i++) {
         /* TODO: matrix[i]에 int cols개 크기의 배열을 할당하세요 */
-        matrix[i] = /* ??? */;
+        matrix[i] = malloc(sizeof(int) * cols);
 
         if (matrix[i] == NULL) {
             printf("%d번째 행 할당 실패!\n", i);
@@ -95,7 +96,7 @@ int main(void) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             /* TODO: matrix[i][j]에 i * cols + j를 저장하세요 */
-            /* ??? */
+            matrix[i][j] = i * cols + j;
         }
     }
 
@@ -106,7 +107,7 @@ int main(void) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             /* TODO: matrix[i][j]를 "%3d " 형식으로 출력하세요 */
-            printf("%3d ", /* ??? */);
+            printf("%3d ", matrix[i][j]);
         }
         printf("\n");
     }
@@ -119,7 +120,7 @@ int main(void) {
         int row_sum = 0;
         for (int j = 0; j < cols; j++) {
             /* TODO: row_sum에 matrix[i][j]를 더하세요 */
-            /* ??? */
+            row_sum+=matrix[i][j];
         }
         printf("행 %d의 합: %d\n", i, row_sum);
     }
@@ -138,12 +139,12 @@ int main(void) {
 
     /* TODO: 각 행을 먼저 free하는 반복문을 작성하세요 */
     for (int i = 0; i < rows; i++) {
-        /* ??? */
+        free(matrix[i]);
     }
 
     /* TODO: 행 포인터 배열(matrix)을 free하고 NULL로 초기화하세요 */
-    /* ??? */
-    /* ??? */
+    free(matrix);
+    matrix=NULL;
 
     printf("메모리 해제 완료\n");
     return 0;

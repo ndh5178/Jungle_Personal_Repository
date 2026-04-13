@@ -53,7 +53,7 @@ typedef struct {
 void print_student(const Student *s) {
     /* TODO: s->name, s->age, s->score를 출력하세요 */
     printf("이름: %s, 나이: %d, 점수: %.1f\n",
-           /* ??? */, /* ??? */, /* ??? */);
+           s->name, s->age, s->score);
 }
 
 /*
@@ -67,7 +67,7 @@ void print_student(const Student *s) {
 Student *create_student(const char *name, int age, float score) {
 
     /* TODO: Student 하나를 저장할 공간을 malloc으로 할당하세요 */
-    Student *s = /* ??? */;
+    Student *s = malloc(sizeof(Student));
 
     if (s == NULL) {
         printf("메모리 할당 실패!\n");
@@ -75,11 +75,11 @@ Student *create_student(const char *name, int age, float score) {
     }
 
     /* TODO: s->name에 name을 복사하세요 (strcpy 사용) */
-    /* ??? */
+    strcpy(s->name,name);
 
     /* TODO: s->age와 s->score에 값을 저장하세요 */
-    /* ??? */
-    /* ??? */
+    s->age=age;
+    s->score=score;
 
     return s;
 }
@@ -108,7 +108,7 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: s2->score를 90.0f로 변경하세요 */
-    /* ??? */
+    s2->score=90.0f;
 
     printf("\n=== Bob 점수 수정 후 ===\n");
     print_student(s2);
@@ -126,7 +126,7 @@ int main(void) {
     Student *class = NULL;
 
     /* TODO: Student count개를 저장할 배열을 동적 할당하세요 */
-    class = /* ??? */;
+    class = malloc(sizeof(Student)*count);
 
     if (class == NULL) {
         free(s1); free(s2); free(s3);
@@ -140,11 +140,11 @@ int main(void) {
 
     for (int i = 0; i < count; i++) {
         /* TODO: class[i].name에 names[i]를 복사하세요 */
-        /* ??? */
+        strcpy(class[i].name,names[i]);
 
         /* TODO: class[i].age와 class[i].score에 값을 저장하세요 */
-        /* ??? */
-        /* ??? */
+        class[i].age=ages[i];
+        class[i].score=scores[i];
     }
 
     /* 배열 출력 */
@@ -152,7 +152,7 @@ int main(void) {
     for (int i = 0; i < count; i++) {
         /* TODO: 아래 NULL을 &class[i]로 바꾸세요 */
         /* 힌트: class[i]는 구조체 값 → 주소를 넘기려면 &class[i] */
-        print_student(NULL);   /* ← 여기를 수정! */
+        print_student(&class[i]);   /* ← 여기를 수정! */
     }
 
     /* -------------------------------------------------------
@@ -161,7 +161,9 @@ int main(void) {
     int best_idx = 0;
     for (int i = 1; i < count; i++) {
         /* TODO: class[i].score > class[best_idx].score 이면 best_idx = i */
-        /* ??? */
+        if(class[i].score > class[best_idx].score){
+            best_idx = i;
+        }
     }
     printf("\n최고 점수 학생: %s (%.1f점)\n",
            class[best_idx].name, class[best_idx].score);
@@ -171,16 +173,15 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: s1, s2, s3 각각 free하고 NULL 초기화 */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-    /* ??? */
-
+    free(s1);
+    free(s2);
+    free(s3);
+    s1=NULL;
+    s2=NULL;
+    s3=NULL;
     /* TODO: class 배열을 free하고 NULL 초기화 */
-    /* ??? */
-    /* ??? */
+    free(class);
+    class=NULL;
 
     printf("\n메모리 해제 완료\n");
     return 0;
