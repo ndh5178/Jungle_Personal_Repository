@@ -160,14 +160,25 @@ void mm_free(void *ptr)
 static void *find_fit(size_t asize)
 {
     void *bp;
+    void *best_bp = NULL;
+    size_t best_size = (size_t)-1;
 
     for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
         if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
-            return bp;
+            size_t current_size = GET_SIZE(headaddress(bp));
+
+            if (current_size == asize) {
+                return bp;
+            }
+
+            if (current_size < best_size) {
+                best_size = current_size;
+                best_bp = bp;
+            }
         }
     }
 
-    return NULL;
+    return best_bp;
 }
 
 static void place(void *bp, size_t asize)

@@ -51,7 +51,6 @@ team_t team = {
 
 /* 힙 기준 포인터 */
 static char *heap_listp;
-static char *free_listp = NULL;
 
 /* size와 alloc bit를 한 워드에 합치기 */
 #define content(size, alloc) ((size) | (alloc))
@@ -72,10 +71,6 @@ static char *free_listp = NULL;
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(headaddress(bp)))
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - byte8)))
 
-#define prevfree(bp) (*(char **)(bp))
-#define nextfree(bp) (*(char **)((char *)(bp) + byte4))
-#define contentprev(bp, ptr) (prevfree(bp) = (char *)(ptr))
-#define contentnext(bp, ptr) (nextfree(bp) = (char *)(ptr))
 /* helper function prototypes */
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
@@ -85,7 +80,6 @@ static void place(void *bp, size_t asize);
 /*
  * mm_init - malloc 패키지를 초기화합니다.
  */
-
 
 
 int mm_init(void)
@@ -115,10 +109,8 @@ static void *extend_heap(size_t words)
     if ((bp = mem_sbrk(size)) == (void *)-1)
         return NULL;
 
-    PUT(headaddress(bp), content(size, 0));
-    contentprev(bp,NULL);
-    contentnext(bp,NULL);
-    PUT(footeraddress(bp), content(size, 0));
+    PUT(headaddress(bp), content(size, 0));         
+    PUT(footeraddress(bp), content(size, 0));         
     PUT(headaddress(NEXT_BLKP(bp)), content(0, 1)); 
 
     return coalesce(bp);
@@ -147,7 +139,7 @@ static void *coalesce(void *bp)
         PUT(footeraddress(bp), content(size, 0));
         return PREV_BLKP(bp);
     }
-    free_listp = bp;
+
     size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
     PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
     PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
@@ -167,15 +159,39 @@ void mm_free(void *ptr)
 
 static void *find_fit(size_t asize)
 {
+    if(asize>=400){
+        void *bp;
+
+        for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
+            if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
+                return bp;
+            }
+        }
+
+        return NULL;
+    }
+    
+
     void *bp;
+    void *best_bp = NULL;
+    size_t best_size = (size_t)-1;
 
     for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
         if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
-            return bp;
+            size_t current_size = GET_SIZE(headaddress(bp));
+
+            if (current_size == asize) {
+                return bp;
+            }
+
+            if (current_size < best_size) {
+                best_size = current_size;
+                best_bp = bp;
+            }
         }
     }
 
-    return NULL;
+    return best_bp;
 }
 
 static void place(void *bp, size_t asize)
@@ -189,6 +205,12 @@ static void place(void *bp, size_t asize)
         bp = NEXT_BLKP(bp);
         PUT(headaddress(bp), content(csize - asize, 0));
         PUT(footeraddress(bp), content(csize - asize, 0));
+        char *next = NEXT_BLKP(bp);
+    if (!GET_ALLOC(headaddress(next))) {
+        size_t merged_size = GET_SIZE(headaddress(bp)) + GET_SIZE(headaddress(next));
+        PUT(headaddress(bp), content(merged_size, 0));
+        PUT(footeraddress(next), content(merged_size, 0));
+    }
     }
     else {
         PUT(headaddress(bp), content(csize, 1));
@@ -237,11 +259,14 @@ void *mm_realloc(void *ptr, size_t size)
     size_t asize;
     size_t oldsize;
     size_t nextsize;
+    size_t prevsize;
     size_t copySize;
     size_t remain;
     size_t next_alloc;
+    size_t prev_alloc;
     void *newptr;
     void *nextbp;
+    void *prevbp;
 
     if (ptr == NULL)
         return mm_malloc(size);
@@ -283,6 +308,30 @@ void *mm_realloc(void *ptr, size_t size)
         return ptr;
     }
 
+    prevbp = PREV_BLKP(ptr);
+    prev_alloc = GET_ALLOC(headaddress(prevbp));
+    prevsize = GET_SIZE(headaddress(prevbp));
+
+    if (!prev_alloc && (oldsize + prevsize) >= asize) {
+        remain = oldsize + prevsize - asize;
+
+        memmove(prevbp, ptr, oldsize - byte8);
+
+        if (remain >= 2 * byte8) {
+            PUT(headaddress(prevbp), content(asize, 1));
+            PUT(footeraddress(prevbp), content(asize, 1));
+
+            nextbp = NEXT_BLKP(prevbp);
+            PUT(headaddress(nextbp), content(remain, 0));
+            PUT(footeraddress(nextbp), content(remain, 0));
+        } else {
+            PUT(headaddress(prevbp), content(oldsize + prevsize, 1));
+            PUT(footeraddress(prevbp), content(oldsize + prevsize, 1));
+        }
+
+        return prevbp;
+    }
+
     newptr = mm_malloc(size);
     if (newptr == NULL)
         return NULL;
@@ -295,6 +344,7 @@ void *mm_realloc(void *ptr, size_t size)
     mm_free(ptr);
     return newptr;
 }
+
 
 // void *mm_realloc(void *ptr, size_t size)
 // {

@@ -51,6 +51,7 @@ team_t team = {
 
 /* 힙 기준 포인터 */
 static char *heap_listp;
+static char *rover;
 
 /* size와 alloc bit를 한 워드에 합치기 */
 #define content(size, alloc) ((size) | (alloc))
@@ -93,6 +94,7 @@ int mm_init(void)
     PUT(heap_listp + 3 * byte4, content(0, 1));    // epilogue header
 
     heap_listp += 2 * byte4;
+    rover = heap_listp;
 
     if (extend_heap(size4096 / byte4) == NULL)
         return -1;
@@ -123,27 +125,32 @@ static void *coalesce(void *bp)
     size_t size = GET_SIZE(headaddress(bp));
 
     if (prev_alloc && next_alloc) {
-        return bp;
     }
 
-    if (prev_alloc && !next_alloc) {
+    else if (prev_alloc && !next_alloc) {
         size += GET_SIZE(headaddress(NEXT_BLKP(bp)));
         PUT(headaddress(bp), content(size, 0));
         PUT(footeraddress(bp), content(size, 0));
-        return bp;
     }
 
-    if (!prev_alloc && next_alloc) {
+    else if (!prev_alloc && next_alloc) {
         size += GET_SIZE(headaddress(PREV_BLKP(bp)));
         PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
         PUT(footeraddress(bp), content(size, 0));
-        return PREV_BLKP(bp);
+        bp = PREV_BLKP(bp);
     }
 
-    size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
-    PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
-    PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
-    return PREV_BLKP(bp);
+    else {
+        size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
+        PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
+        PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
+        bp = PREV_BLKP(bp);
+    }
+
+    if ((rover > (char *)bp) && (rover < NEXT_BLKP(bp)))
+        rover = bp;
+
+    return bp;
 }
 /*
  * mm_free - 현재 이 단순 구현에서는 free를 호출해도 아무 일도 하지 않습니다.
@@ -159,11 +166,17 @@ void mm_free(void *ptr)
 
 static void *find_fit(size_t asize)
 {
-    void *bp;
+    char *oldrover = rover;
 
-    for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
-        if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
-            return bp;
+    for (; GET_SIZE(headaddress(rover)) > 0; rover = NEXT_BLKP(rover)) {
+        if (!GET_ALLOC(headaddress(rover)) && asize <= GET_SIZE(headaddress(rover))) {
+            return rover;
+        }
+    }
+
+    for (rover = heap_listp; rover < oldrover; rover = NEXT_BLKP(rover)) {
+        if (!GET_ALLOC(headaddress(rover)) && asize <= GET_SIZE(headaddress(rover))) {
+            return rover;
         }
     }
 
@@ -182,11 +195,11 @@ static void place(void *bp, size_t asize)
         PUT(headaddress(bp), content(csize - asize, 0));
         PUT(footeraddress(bp), content(csize - asize, 0));
         char *next = NEXT_BLKP(bp);
-    if (!GET_ALLOC(headaddress(next))) {
-        size_t merged_size = GET_SIZE(headaddress(bp)) + GET_SIZE(headaddress(next));
-        PUT(headaddress(bp), content(merged_size, 0));
-        PUT(footeraddress(next), content(merged_size, 0));
-    }
+        if (!GET_ALLOC(headaddress(next))) {
+            size_t merged_size = GET_SIZE(headaddress(bp)) + GET_SIZE(headaddress(next));
+            PUT(headaddress(bp), content(merged_size, 0));
+            PUT(footeraddress(next), content(merged_size, 0));
+        }
     }
     else {
         PUT(headaddress(bp), content(csize, 1));
