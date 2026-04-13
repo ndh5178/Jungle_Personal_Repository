@@ -49,7 +49,7 @@ int main(void) {
     int *ptr = NULL;
 
     /* TODO: ptr에 정수 하나를 저장할 공간을 malloc으로 할당하세요 */
-    ptr = /* ??? */;
+    ptr = malloc(sizeof(int));
 
     /* -------------------------------------------------------
      * NULL 체크: malloc 실패 시 프로그램이 죽는 걸 막음
@@ -72,9 +72,9 @@ int main(void) {
 
     /* TODO: ptr이 가리키는 곳에 42를 저장하세요 */
     /* ??? */
-
+    *ptr = 42;
     /* TODO: ptr이 가리키는 값을 출력하세요 */
-    printf("저장된 값: %d\n", /* ??? */);
+    printf("저장된 값: %d\n", *ptr);
     printf("ptr의 주소(16진수): %p\n", (void*)ptr);
 
     /* -------------------------------------------------------
@@ -89,8 +89,11 @@ int main(void) {
     /* TODO: ptr을 free하고, ptr = NULL로 초기화하세요 */
     /* ??? */
     /* ??? */
-
-    printf("메모리 해제 완료\n");
+    //질문: 마지막 해제할때 그 해제된 변수를 다시 사용할수있나.
+    free(ptr);
+    // *ptr=NULL;
+    ptr=2;
+    printf("메모리 해제 완료 %d \n",ptr);
 
     return 0;
 }

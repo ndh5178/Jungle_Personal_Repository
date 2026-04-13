@@ -46,7 +46,7 @@ int main(void) {
     int *arr = NULL;
 
     /* TODO: arr에 int n개 크기의 메모리를 동적 할당하세요 */
-    arr = /* ??? */;
+    arr = malloc(sizeof(typeof(arr))*n);
 
     if (arr == NULL) {
         printf("메모리 할당 실패!\n");
@@ -64,7 +64,7 @@ int main(void) {
      * ------------------------------------------------------- */
     for (int i = 0; i < n; i++) {
         /* TODO: arr[i]에 i * 10을 저장하세요 */
-        /* ??? */
+        arr[i]=i*10;
     }
 
     /* -------------------------------------------------------
@@ -73,7 +73,7 @@ int main(void) {
     printf("동적 배열 내용: ");
     for (int i = 0; i < n; i++) {
         /* TODO: arr[i]를 출력하세요 */
-        printf("%d ", /* ??? */);
+        printf("%d ", arr[i]);
     }
     printf("\n");
 
@@ -85,7 +85,7 @@ int main(void) {
     int sum = 0;
     for (int i = 0; i < n; i++) {
         /* TODO: sum에 arr[i]를 더하세요 */
-        /* ??? */
+        sum+=arr[i];
     }
     printf("합계: %d\n", sum);
 
@@ -99,8 +99,8 @@ int main(void) {
      * ------------------------------------------------------- */
 
     /* TODO: arr을 free하고 NULL로 초기화하세요 */
-    /* ??? */
-    /* ??? */
+    free(arr);
+    arr=NULL;
 
     printf("메모리 해제 완료\n");
     return 0;

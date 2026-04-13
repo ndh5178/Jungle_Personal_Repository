@@ -51,7 +51,6 @@ team_t team = {
 
 /* 힙 기준 포인터 */
 static char *heap_listp;
-static char *free_listp = NULL;
 
 /* size와 alloc bit를 한 워드에 합치기 */
 #define content(size, alloc) ((size) | (alloc))
@@ -72,10 +71,6 @@ static char *free_listp = NULL;
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(headaddress(bp)))
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - byte8)))
 
-#define prevfree(bp) (*(char **)(bp))
-#define nextfree(bp) (*(char **)((char *)(bp) + byte4))
-#define contentprev(bp, ptr) (prevfree(bp) = (char *)(ptr))
-#define contentnext(bp, ptr) (nextfree(bp) = (char *)(ptr))
 /* helper function prototypes */
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
@@ -85,7 +80,6 @@ static void place(void *bp, size_t asize);
 /*
  * mm_init - malloc 패키지를 초기화합니다.
  */
-
 
 
 int mm_init(void)
@@ -115,10 +109,8 @@ static void *extend_heap(size_t words)
     if ((bp = mem_sbrk(size)) == (void *)-1)
         return NULL;
 
-    PUT(headaddress(bp), content(size, 0));
-    contentprev(bp,NULL);
-    contentnext(bp,NULL);
-    PUT(footeraddress(bp), content(size, 0));
+    PUT(headaddress(bp), content(size, 0));         
+    PUT(footeraddress(bp), content(size, 0));         
     PUT(headaddress(NEXT_BLKP(bp)), content(0, 1)); 
 
     return coalesce(bp);
@@ -147,7 +139,7 @@ static void *coalesce(void *bp)
         PUT(footeraddress(bp), content(size, 0));
         return PREV_BLKP(bp);
     }
-    free_listp = bp;
+
     size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
     PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
     PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
