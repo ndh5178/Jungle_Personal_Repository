@@ -32,16 +32,6 @@ team_t team = {
     "",
     ""};
 
-
-
-/* 워드(4바이트) 또는 더블 워드(8바이트) 정렬 */
-#define ALIGNMENT 8
-
-/* size를 ALIGNMENT의 배수로 올림 */
-#define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~0x7)
-
-#define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
-
 /* Basic constants and macros */
 #define byte4 4             /* header/footer 한 칸 크기 */
 #define byte8 8             /* double word 크기 */
@@ -51,7 +41,7 @@ team_t team = {
 
 /* 힙 기준 포인터 */
 static char *heap_listp;
-static char *free_listp = NULL;
+static char *rover;
 
 /* size와 alloc bit를 한 워드에 합치기 */
 #define content(size, alloc) ((size) | (alloc))
@@ -72,20 +62,11 @@ static char *free_listp = NULL;
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(headaddress(bp)))
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - byte8)))
 
-#define prevfree(bp) (*(char **)(bp))
-#define nextfree(bp) (*(char **)((char *)(bp) + byte4))
-#define contentprev(bp, ptr) (prevfree(bp) = (char *)(ptr))
-#define contentnext(bp, ptr) (nextfree(bp) = (char *)(ptr))
 /* helper function prototypes */
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
 static void *find_fit(size_t asize);
 static void place(void *bp, size_t asize);
-
-/*
- * mm_init - malloc 패키지를 초기화합니다.
- */
-
 
 
 int mm_init(void)
@@ -93,12 +74,13 @@ int mm_init(void)
     if ((heap_listp = mem_sbrk(4 * byte4)) == (void *)-1)
         return -1;
 
-    PUT(heap_listp, 0);                          // alignment padding
-    PUT(heap_listp + byte4, content(byte8, 1));    // prologue header
-    PUT(heap_listp + 2 * byte4, content(byte8, 1));// prologue footer
-    PUT(heap_listp + 3 * byte4, content(0, 1));    // epilogue header
+    PUT(heap_listp, 0);                          
+    PUT(heap_listp + byte4, content(byte8, 1));    
+    PUT(heap_listp + 2 * byte4, content(byte8, 1));
+    PUT(heap_listp + 3 * byte4, content(0, 1));    
 
     heap_listp += 2 * byte4;
+    rover = heap_listp;
 
     if (extend_heap(size4096 / byte4) == NULL)
         return -1;
@@ -115,10 +97,8 @@ static void *extend_heap(size_t words)
     if ((bp = mem_sbrk(size)) == (void *)-1)
         return NULL;
 
-    PUT(headaddress(bp), content(size, 0));
-    contentprev(bp,NULL);
-    contentnext(bp,NULL);
-    PUT(footeraddress(bp), content(size, 0));
+    PUT(headaddress(bp), content(size, 0));         
+    PUT(footeraddress(bp), content(size, 0));         
     PUT(headaddress(NEXT_BLKP(bp)), content(0, 1)); 
 
     return coalesce(bp);
@@ -131,75 +111,34 @@ static void *coalesce(void *bp)
     size_t size = GET_SIZE(headaddress(bp));
 
     if (prev_alloc && next_alloc) {
-        return bp;
     }
 
-    if (prev_alloc && !next_alloc) {
+    else if (prev_alloc && !next_alloc) {
         size += GET_SIZE(headaddress(NEXT_BLKP(bp)));
         PUT(headaddress(bp), content(size, 0));
         PUT(footeraddress(bp), content(size, 0));
-        return bp;
     }
 
-    if (!prev_alloc && next_alloc) {
+    else if (!prev_alloc && next_alloc) {
         size += GET_SIZE(headaddress(PREV_BLKP(bp)));
         PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
         PUT(footeraddress(bp), content(size, 0));
-        return PREV_BLKP(bp);
-    }
-    free_listp = bp;
-    size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
-    PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
-    PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
-    return PREV_BLKP(bp);
-}
-/*
- * mm_free - 현재 이 단순 구현에서는 free를 호출해도 아무 일도 하지 않습니다.
- */
-void mm_free(void *ptr)
-{
-    size_t size = GET_SIZE(headaddress(ptr));
-
-    PUT(headaddress(ptr), content(size, 0));
-    PUT(footeraddress(ptr), content(size, 0));
-    coalesce(ptr);
-}
-
-static void *find_fit(size_t asize)
-{
-    void *bp;
-
-    for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
-        if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
-            return bp;
-        }
+        bp = PREV_BLKP(bp);
     }
 
-    return NULL;
-}
-
-static void place(void *bp, size_t asize)
-{
-    size_t csize = GET_SIZE(headaddress(bp));
-
-    if ((csize - asize) >= (2 * byte8)) {
-        PUT(headaddress(bp), content(asize, 1));
-        PUT(footeraddress(bp), content(asize, 1));
-
-        bp = NEXT_BLKP(bp);
-        PUT(headaddress(bp), content(csize - asize, 0));
-        PUT(footeraddress(bp), content(csize - asize, 0));
-    }
     else {
-        PUT(headaddress(bp), content(csize, 1));
-        PUT(footeraddress(bp), content(csize, 1));
+        size += GET_SIZE(headaddress(PREV_BLKP(bp))) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
+        PUT(headaddress(PREV_BLKP(bp)), content(size, 0));
+        PUT(footeraddress(NEXT_BLKP(bp)), content(size, 0));
+        bp = PREV_BLKP(bp);
     }
+
+    if ((rover > (char *)bp) && (rover < NEXT_BLKP(bp)))
+        rover = bp;
+
+    return bp;
 }
 
-/*
- * mm_malloc - brk 포인터를 증가시키는 방식으로 블록을 할당합니다.
- *     항상 정렬 단위의 배수 크기로 블록을 할당해야 합니다.
- */
 void *mm_malloc(size_t size)
 {
     size_t asize;
@@ -219,29 +158,117 @@ void *mm_malloc(size_t size)
         return bp;
     }
 
-    extendsize = MAX(asize, size4096);
+    extendsize = MAX(asize, (1 << 12));
     if ((bp = extend_heap(extendsize / byte4)) == NULL)
         return NULL;
-
+    coalesce(bp);
     place(bp, asize);
     return bp;
 }
 
+static void *find_fit(size_t asize)
+{
+    char *oldrover = rover;
+    char *best_bp = NULL;
+    size_t best_size = -1;
+    int lookahead = -1;
+
+    do {
+        if (!GET_ALLOC(headaddress(rover)) && asize <= GET_SIZE(headaddress(rover))) {
+            size_t current_size = GET_SIZE(headaddress(rover));
+
+            if (current_size == asize) {
+                return rover;
+            }
+
+            if (best_bp == NULL) {
+                best_bp = rover;
+                best_size = current_size;
+                if (asize <= 48) lookahead = 15;
+                else lookahead = 7;
+                
+            }
+            else if (current_size < best_size) {
+                best_bp = rover;
+                best_size = current_size;
+            }
+        }
+
+        if (best_bp != NULL) {
+            if (lookahead == 0) {
+                rover = best_bp;
+                return best_bp;
+            }
+            lookahead--;
+        }
+
+        rover = NEXT_BLKP(rover);
+        if (GET_SIZE(headaddress(rover)) == 0) {
+            rover = heap_listp;
+        }
+    } while (rover != oldrover);
+
+    if (best_bp != NULL) {
+        rover = best_bp;
+        return best_bp;
+    }
+
+    return NULL;
+}
+
+static void place(void *bp, size_t asize)
+{
+    size_t csize = GET_SIZE(headaddress(bp));
+
+    if ((csize - asize) >= (2 * byte8)) {
+        PUT(headaddress(bp), content(asize, 1));
+        PUT(footeraddress(bp), content(asize, 1));
+
+        bp = NEXT_BLKP(bp);
+        PUT(headaddress(bp), content(csize - asize, 0));
+        PUT(footeraddress(bp), content(csize - asize, 0));
+        char *next = NEXT_BLKP(bp);
+        if (!GET_ALLOC(headaddress(next))) {
+            size_t merged_size = GET_SIZE(headaddress(bp)) + GET_SIZE(headaddress(next));
+            PUT(headaddress(bp), content(merged_size, 0));
+            PUT(footeraddress(next), content(merged_size, 0));
+        }
+    }
+    else {
+        char *next2 = NEXT_BLKP(bp);
+        if (!GET_ALLOC(headaddress(next2))) {
+            PUT(headaddress(bp), content(asize, 1));
+            PUT(footeraddress(bp), content(asize, 1));
+
+            bp = NEXT_BLKP(bp);
+            PUT(headaddress(bp), content(csize - asize, 0));
+            PUT(footeraddress(bp), content(csize - asize, 0));
+
+            size_t merged_size2 = GET_SIZE(headaddress(bp)) + GET_SIZE(headaddress(NEXT_BLKP(bp)));
+            PUT(headaddress(bp), content(merged_size2, 0));
+            PUT(footeraddress(NEXT_BLKP(bp)), content(merged_size2, 0));
+        }
+        else{
+            PUT(headaddress(bp), content(csize, 1));
+            PUT(footeraddress(bp), content(csize, 1));
+        }
+    }
+}
+
+void mm_free(void *ptr)
+{
+    size_t size = GET_SIZE(headaddress(ptr));
+
+    PUT(headaddress(ptr), content(size, 0));
+    PUT(footeraddress(ptr), content(size, 0));
+    coalesce(ptr);
+}
 
 
-/*
- * mm_realloc - mm_malloc과 mm_free를 이용해 단순하게 구현되어 있습니다.
- */
 void *mm_realloc(void *ptr, size_t size)
 {
-    size_t asize;
-    size_t oldsize;
-    size_t nextsize;
-    size_t copySize;
-    size_t remain;
-    size_t next_alloc;
-    void *newptr;
-    void *nextbp;
+    size_t asize,oldsize,nextsize,prevsize,copySize,remain,next_alloc,prev_alloc;
+    void *newptr,*nextbp,*prevbp;
 
     if (ptr == NULL)
         return mm_malloc(size);
@@ -275,12 +302,56 @@ void *mm_realloc(void *ptr, size_t size)
             nextbp = NEXT_BLKP(ptr);
             PUT(headaddress(nextbp), content(remain, 0));
             PUT(footeraddress(nextbp), content(remain, 0));
+            char *next = NEXT_BLKP(nextbp);
+            if (!GET_ALLOC(headaddress(next))) {
+                size_t merged_size = GET_SIZE(headaddress(nextbp)) + GET_SIZE(headaddress(next));
+                PUT(headaddress(nextbp), content(merged_size, 0));
+                PUT(footeraddress(next), content(merged_size, 0));
+            }
         } else {
-            PUT(headaddress(ptr), content(oldsize + nextsize, 1));
-            PUT(footeraddress(ptr), content(oldsize + nextsize, 1));
+            char *next2 = NEXT_BLKP(ptr);
+            if (!GET_ALLOC(headaddress(next2))) {
+                PUT(headaddress(ptr), content(asize, 1));
+                PUT(footeraddress(ptr), content(asize, 1));
+
+                nextbp = NEXT_BLKP(ptr);
+                PUT(headaddress(nextbp), content(oldsize + nextsize - asize, 0));
+                PUT(footeraddress(nextbp), content(oldsize + nextsize - asize, 0));
+
+                size_t merged_size2 = GET_SIZE(headaddress(nextbp)) + GET_SIZE(headaddress(NEXT_BLKP(nextbp)));
+                PUT(headaddress(nextbp), content(merged_size2, 0));
+                PUT(footeraddress(NEXT_BLKP(nextbp)), content(merged_size2, 0));
+            }
+            else{
+                PUT(headaddress(ptr), content(oldsize + nextsize, 1));
+                PUT(footeraddress(ptr), content(oldsize + nextsize, 1));
+            }
+        }
+        return ptr;
+    }
+    prevbp = PREV_BLKP(ptr);
+    prev_alloc = GET_ALLOC(headaddress(prevbp));
+    prevsize = GET_SIZE(headaddress(prevbp));
+
+    if (!prev_alloc && (oldsize + prevsize) >= asize) {
+        remain = oldsize + prevsize - asize;
+
+        memmove(prevbp, ptr, oldsize - byte8);
+
+        if (remain >= 2 * byte8) {
+            PUT(headaddress(prevbp), content(asize, 1));
+            PUT(footeraddress(prevbp), content(asize, 1));
+
+            nextbp = NEXT_BLKP(prevbp);
+            PUT(headaddress(nextbp), content(remain, 0));
+            PUT(footeraddress(nextbp), content(remain, 0));
+
+        } else {
+            PUT(headaddress(prevbp), content(oldsize + prevsize, 1));
+            PUT(footeraddress(prevbp), content(oldsize + prevsize, 1));
         }
 
-        return ptr;
+        return prevbp;
     }
 
     newptr = mm_malloc(size);
@@ -295,29 +366,3 @@ void *mm_realloc(void *ptr, size_t size)
     mm_free(ptr);
     return newptr;
 }
-
-// void *mm_realloc(void *ptr, size_t size)
-// {
-//     void *newptr;
-//     size_t copySize;
-
-//     if (ptr == NULL)
-//         return mm_malloc(size);
-
-//     if (size == 0) {
-//         mm_free(ptr);
-//         return NULL;
-//     }
-
-//     newptr = mm_malloc(size);
-//     if (newptr == NULL)
-//         return NULL;
-
-//     copySize = GET_SIZE(headaddress(ptr)) - byte8;
-//     if (size < copySize)
-//         copySize = size;
-
-//     memcpy(newptr, ptr, copySize);
-//     mm_free(ptr);
-//     return newptr;
-// }

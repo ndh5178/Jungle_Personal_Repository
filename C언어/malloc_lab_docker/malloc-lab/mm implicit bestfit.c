@@ -1,12 +1,13 @@
 /*
- * mm-naive.c - 媛??鍮좊Ⅴ吏留?硫붾え由??⑥쑉? 媛???⑥뼱吏??malloc ?⑦궎吏.
+ * mm-naive.c - 가장 빠르지만 메모리 효율은 가장 떨어지는 malloc 패키지.
  *
- * ???⑥닚??援ы쁽?먯꽌??brk ?ъ씤?곕? ?⑥닚??利앷??쒗궎??諛⑹떇?쇰줈 釉붾줉?? * ?좊떦?⑸땲?? 媛?釉붾줉? ?쒖닔 payload留?媛吏硫? ?ㅻ뜑? ?명꽣媛 ?놁뒿?덈떎.
- * 釉붾줉? 蹂묓빀(coalescing)?섍굅???ъ궗?⑸릺吏 ?딆쑝硫? realloc ??떆
- * mm_malloc怨?mm_free瑜?吏곸젒 ?댁슜??援ы쁽?섏뼱 ?덉뒿?덈떎.
+ * 이 단순한 구현에서는 brk 포인터를 단순히 증가시키는 방식으로 블록을
+ * 할당합니다. 각 블록은 순수 payload만 가지며, 헤더와 푸터가 없습니다.
+ * 블록은 병합(coalescing)되거나 재사용되지 않으며, realloc 역시
+ * mm_malloc과 mm_free를 직접 이용해 구현되어 있습니다.
  *
- * ?숈깮 ?덈궡: ???ㅻ뜑 二쇱꽍? 蹂몄씤??援ы쁽??諛⑹떇???듭떖 ?꾩씠?붿뼱瑜??ㅻ챸?섎뒗
- * 二쇱꽍?쇰줈 諛붽퓭 二쇱꽭??
+ * 학생 안내: 이 헤더 주석은 본인이 구현한 방식의 핵심 아이디어를 설명하는
+ * 주석으로 바꿔 주세요.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,55 +19,55 @@
 #include "memlib.h"
 
 /*********************************************************
- * ?숈깮 ?덈궡: ?ㅻⅨ ?묒뾽???쒖옉?섍린 ?꾩뿉 ?꾨옒 援ъ“泥댁뿉
- * ? ?뺣낫瑜?癒쇱? ?낅젰?섏꽭??
+ * 학생 안내: 다른 작업을 시작하기 전에 아래 구조체에
+ * 팀 정보를 먼저 입력하세요.
  ********************************************************/
 team_t team = {
-    /* ? ?대쫫 */
+    /* 팀 이름 */
     "2team",
-    /* 泥?踰덉㎏ ??먯쓽 ?대쫫 */
+    /* 첫 번째 팀원의 이름 */
     "Nam",
-    /* 泥?踰덉㎏ ??먯쓽 ?대찓??二쇱냼 */
+    /* 첫 번째 팀원의 이메일 주소 */
     "ehdgus5178@gmail.com",
     "",
     ""};
 
 
 
-/* ?뚮뱶(4諛붿씠?? ?먮뒗 ?붾툝 ?뚮뱶(8諛붿씠?? ?뺣젹 */
+/* 워드(4바이트) 또는 더블 워드(8바이트) 정렬 */
 #define ALIGNMENT 8
 
-/* size瑜?ALIGNMENT??諛곗닔濡??щ┝ */
+/* size를 ALIGNMENT의 배수로 올림 */
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~0x7)
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
 /* Basic constants and macros */
-#define byte4 4             /* header/footer ??移??ш린 */
-#define byte8 8             /* double word ?ш린 */
-#define size4096 (1 << 10) /* 泥섏쓬/異붽?濡??숈쓣 ?섎┫ 湲곕낯 ?ш린: 4096 bytes */
+#define byte4 4             /* header/footer 한 칸 크기 */
+#define byte8 8             /* double word 크기 */
+#define size4096 (1 << 10) /* 처음/추가로 힙을 늘릴 기본 크기: 4096 bytes */
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-/* ??湲곗? ?ъ씤??*/
+/* 힙 기준 포인터 */
 static char *heap_listp;
 
-/* size? alloc bit瑜????뚮뱶???⑹튂湲?*/
+/* size와 alloc bit를 한 워드에 합치기 */
 #define content(size, alloc) ((size) | (alloc))
 
-/* p媛 媛由ы궎??二쇱냼?먯꽌 4諛붿씠???쎄린/?곌린 */
+/* p가 가리키는 주소에서 4바이트 읽기/쓰기 */
 #define GET(p) (*(unsigned int *)(p))
 #define PUT(p, val) (*(unsigned int *)(p) = (val))
 
-/* header/footer 媛믪뿉??size? alloc bit 爰쇰궡湲?*/
+/* header/footer 값에서 size와 alloc bit 꺼내기 */
 #define GET_SIZE(p) (GET(p) & ~0x7)
 #define GET_ALLOC(p) (GET(p) & 0x1)
 
-/* bp??payload ?쒖옉 二쇱냼?쇨퀬 媛??*/
+/* bp는 payload 시작 주소라고 가정 */
 #define headaddress(bp) ((char *)(bp) - byte4)
 #define footeraddress(bp) ((char *)(bp) + GET_SIZE(headaddress(bp)) - byte8)
 
-/* ?ㅼ쓬 釉붾줉 / ?댁쟾 釉붾줉??payload ?쒖옉 二쇱냼 怨꾩궛 */
+/* 다음 블록 / 이전 블록의 payload 시작 주소 계산 */
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(headaddress(bp)))
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - byte8)))
 
@@ -77,7 +78,7 @@ static void *find_fit(size_t asize);
 static void place(void *bp, size_t asize);
 
 /*
- * mm_init - malloc ?⑦궎吏瑜?珥덇린?뷀빀?덈떎.
+ * mm_init - malloc 패키지를 초기화합니다.
  */
 
 
@@ -145,7 +146,7 @@ static void *coalesce(void *bp)
     return PREV_BLKP(bp);
 }
 /*
- * mm_free - ?꾩옱 ???⑥닚 援ы쁽?먯꽌??free瑜??몄텧?대룄 ?꾨Т ?쇰룄 ?섏? ?딆뒿?덈떎.
+ * mm_free - 현재 이 단순 구현에서는 free를 호출해도 아무 일도 하지 않습니다.
  */
 void mm_free(void *ptr)
 {
@@ -158,19 +159,6 @@ void mm_free(void *ptr)
 
 static void *find_fit(size_t asize)
 {
-    if(asize>=48){
-        void *bp;
-
-        for (bp = heap_listp; GET_SIZE(headaddress(bp)) > 0; bp = NEXT_BLKP(bp)) {
-            if (!GET_ALLOC(headaddress(bp)) && asize <= GET_SIZE(headaddress(bp))) {
-                return bp;
-            }
-        }
-
-        return NULL;
-    }
-    
-
     void *bp;
     void *best_bp = NULL;
     size_t best_size = (size_t)-1;
@@ -218,8 +206,8 @@ static void place(void *bp, size_t asize)
 }
 
 /*
- * mm_malloc - brk ?ъ씤?곕? 利앷??쒗궎??諛⑹떇?쇰줈 釉붾줉???좊떦?⑸땲??
- *     ??긽 ?뺣젹 ?⑥쐞??諛곗닔 ?ш린濡?釉붾줉???좊떦?댁빞 ?⑸땲??
+ * mm_malloc - brk 포인터를 증가시키는 방식으로 블록을 할당합니다.
+ *     항상 정렬 단위의 배수 크기로 블록을 할당해야 합니다.
  */
 void *mm_malloc(size_t size)
 {
@@ -251,7 +239,7 @@ void *mm_malloc(size_t size)
 
 
 /*
- * mm_realloc - mm_malloc怨?mm_free瑜??댁슜???⑥닚?섍쾶 援ы쁽?섏뼱 ?덉뒿?덈떎.
+ * mm_realloc - mm_malloc과 mm_free를 이용해 단순하게 구현되어 있습니다.
  */
 void *mm_realloc(void *ptr, size_t size)
 {
@@ -344,3 +332,29 @@ void *mm_realloc(void *ptr, size_t size)
     return newptr;
 }
 
+
+// void *mm_realloc(void *ptr, size_t size)
+// {
+//     void *newptr;
+//     size_t copySize;
+
+//     if (ptr == NULL)
+//         return mm_malloc(size);
+
+//     if (size == 0) {
+//         mm_free(ptr);
+//         return NULL;
+//     }
+
+//     newptr = mm_malloc(size);
+//     if (newptr == NULL)
+//         return NULL;
+
+//     copySize = GET_SIZE(headaddress(ptr)) - byte8;
+//     if (size < copySize)
+//         copySize = size;
+
+//     memcpy(newptr, ptr, copySize);
+//     mm_free(ptr);
+//     return newptr;
+// }
