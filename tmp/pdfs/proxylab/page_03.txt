@@ -1,0 +1,33 @@
+You should notice in the above example that the web browser’s request line ends with HTTP/1.1, while
+theproxy’srequestlineendswithHTTP/1.0. ModernwebbrowserswillgenerateHTTP/1.1requests,but
+yourproxyshouldhandlethemandforwardthemasHTTP/1.0requests.
+It is important to consider that HTTP requests, even just the subset of HTTP/1.0 GET requests, can be
+incredibly complicated. The textbook describes certain details of HTTP transactions, but you should refer
+to RFC 1945 for the complete HTTP/1.0 specification. Ideally your HTTP request parser will be fully
+robustaccordingtotherelevantsectionsofRFC1945,exceptforonedetail: whilethespecificationallows
+for multiline request fields, your proxy is not required to properly handle them. Of course, your proxy
+shouldneverprematurelyabortduetoamalformedrequest.
+4.2 Requestheaders
+TheimportantrequestheadersforthislabaretheHost,User-Agent,Connection,andProxy-Connection
+headers:
+• Always send a Host header. While this behavior is technically not sanctioned by the HTTP/1.0
+specification, it is necessary to coax sensible responses out of certain Web servers, especially those
+thatusevirtualhosting.
+TheHostheaderdescribesthehostnameoftheendserver. Forexample, toaccesshttp://www.
+cmu.edu/hub/index.html,yourproxywouldsendthefollowingheader:
+Host: www.cmu.edu
+ItispossiblethatwebbrowserswillattachtheirownHostheaderstotheirHTTPrequests. Ifthatis
+thecase,yourproxyshouldusethesameHostheaderasthebrowser.
+• YoumaychoosetoalwayssendthefollowingUser-Agentheader:
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3)
+Gecko/20120305 Firefox/10.0.3
+Theheaderisprovidedontwoseparatelinesbecauseitdoesnotfitasasinglelineinthewriteup,but
+yourproxyshouldsendtheheaderasasingleline.
+The User-Agent header identifies the client (in terms of parameters such as the operating system
+and browser), and web servers often use the identifying information to manipulate the content they
+serve. SendingthisparticularUser-Agent: stringmayimprove,incontentanddiversity,thematerial
+thatyougetbackduringsimpletelnet-styletesting.
+• AlwayssendthefollowingConnectionheader:
+Connection: close
+• AlwayssendthefollowingProxy-Connectionheader:
+3

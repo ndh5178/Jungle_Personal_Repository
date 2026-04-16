@@ -1,0 +1,29 @@
+3 Handout instructions
+SITE-SPECIFIC:Insertaparagraphherethatexplainshowtheinstructorwillhandout
+theproxylab-handout.tarfiletothestudents.
+Copy the handout file to a protected directory on the Linux machine where you plan to do your work, and
+thenissuethefollowingcommand:
+linux> tar xvf proxylab-handout.tar
+This will generate a handout directory called proxylab-handout. The README file describes the
+variousfiles.
+4 Part I: Implementing a sequential web proxy
+ThefirststepisimplementingabasicsequentialproxythathandlesHTTP/1.0GETrequests. Otherrequests
+type,suchasPOST,arestrictlyoptional.
+Whenstarted,yourproxyshouldlistenforincomingconnectionsonaportwhosenumberwillbespecified
+on the command line. Once a connection is established, your proxy should read the entirety of the request
+fromtheclientandparsetherequest. ItshoulddeterminewhethertheclienthassentavalidHTTPrequest;
+ifso,itcanthenestablishitsownconnectiontotheappropriatewebserverthenrequesttheobjecttheclient
+specified. Finally,yourproxyshouldreadtheserver’sresponseandforwardittotheclient.
+4.1 HTTP/1.0GETrequests
+When an end user enters a URL such as http://www.cmu.edu/hub/index.html into the address
+barofawebbrowser,thebrowserwillsendanHTTPrequesttotheproxythatbeginswithalinethatmight
+resemblethefollowing:
+GET http://www.cmu.edu/hub/index.html HTTP/1.1
+Inthatcase,theproxyshouldparsetherequestintoatleastthefollowingfields: thehostname,www.cmu.edu;
+and the path or query and everything following it, /hub/index.html. That way, the proxy can deter-
+minethatitshouldopenaconnectiontowww.cmu.eduandsendanHTTPrequestofitsownstartingwith
+alineofthefollowingform:
+GET /hub/index.html HTTP/1.0
+NotethatalllinesinanHTTPrequestendwithacarriagereturn,‘\r’,followedbyanewline,‘\n’. Also
+importantisthateveryHTTPrequestisterminatedbyanemptyline: "\r\n".
+2

@@ -1,0 +1,31 @@
+Proxy-Connection: close
+The Connection and Proxy-Connection headers are used to specify whether a connection
+will be kept alive after the first request/response exchange is completed. It is perfectly acceptable
+(and suggested) to have your proxy open a new connection for each request. Specifying close as
+the value of these headers alerts web servers that your proxy intends to close connections after the
+firstrequest/responseexchange.
+For your convenience, the values of the described User-Agent header is provided to you as a string
+constantinproxy.c.
+Finally, if a browser sends any additional request headers as part of an HTTP request, your proxy should
+forwardthemunchanged.
+4.3 Portnumbers
+Therearetwosignificantclassesofportnumbersforthislab: HTTPrequestportsandyourproxy’slistening
+port.
+TheHTTPrequestportisanoptionalfieldintheURLofanHTTPrequest. Thatis,theURLmaybeofthe
+form, http://www.cmu.edu:8080/hub/index.html, in which case your proxy should connect
+to the host www.cmu.edu on port 8080 instead of the default HTTP port, which is port 80. Your proxy
+mustproperlyfunctionwhetherornottheportnumberisincludedintheURL.
+The listening port is the port on which your proxy should listen for incoming connections. Your proxy
+shouldacceptacommandlineargumentspecifyingthelisteningportnumberforyourproxy. Forexample,
+withthefollowingcommand,yourproxyshouldlistenforconnectionsonport15213:
+linux> ./proxy 15213
+You may select any non-privileged listening port (greater than 1,024 and less than 65,536) as long as it
+is not used by other processes. Since each proxy must use a unique listening port and many people will
+simultaneously be working on each machine, the script port-for-user.pl is provided to help you
+pickyourownpersonalportnumber. UseittogenerateportnumberbasedonyouruserID:
+linux> ./port-for-user.pl droh
+droh: 45806
+The port, p, returned by port-for-user.pl is always an even number. So if you need an additional
+portnumber,sayfortheTiny server,youcansafelyuseportspandp+1.
+Pleasedon’tpickyourownrandomport. Ifyoudo,youruntheriskofinterferingwithanotheruser.
+4

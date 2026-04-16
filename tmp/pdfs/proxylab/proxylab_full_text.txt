@@ -1,0 +1,308 @@
+===== PAGE 1 =====
+15-213, Fall 20XX
+Proxy Lab: Writing a Caching Web Proxy
+Assigned: Thu, Nov 19
+Due: Tue, Dec 8, 11:59 PM
+Last Possible Time to Turn In: Fri, Dec 11, 11:59 PM
+1 Introduction
+AWebproxyisaprogramthatactsasamiddlemanbetweenaWebbrowserandanendserver. Insteadof
+contacting the end server directly to get a Web page, the browser contacts the proxy, which forwards the
+request on to the end server. When the end server replies to the proxy, the proxy sends the reply on to the
+browser.
+Proxies are useful for many purposes. Sometimes proxies are used in firewalls, so that browsers behind a
+firewall can only contact a server beyond the firewall via the proxy. Proxies can also act as anonymizers:
+by stripping requests of all identifying information, a proxy can make the browser anonymous to Web
+servers. Proxiescanevenbeusedtocachewebobjectsbystoringlocalcopiesofobjectsfromserversthen
+responding to future requests by reading them out of its cache rather than by communicating again with
+remoteservers.
+Inthislab,youwillwriteasimpleHTTPproxythatcacheswebobjects. Forthefirstpartofthelab,youwill
+setuptheproxytoacceptincomingconnections,readandparserequests,forwardrequeststowebservers,
+read the servers’ responses, and forward those responses to the corresponding clients. This first part will
+involve learning about basic HTTP operation and how to use sockets to write programs that communicate
+overnetworkconnections. Inthesecondpart,youwillupgradeyourproxytodealwithmultipleconcurrent
+connections. This will introduce you to dealing with concurrency, a crucial systems concept. In the third
+and last part, you will add caching to your proxy using a simple main memory cache of recently accessed
+webcontent.
+2 Logistics
+Thisisanindividualproject.
+1
+
+===== PAGE 2 =====
+3 Handout instructions
+SITE-SPECIFIC:Insertaparagraphherethatexplainshowtheinstructorwillhandout
+theproxylab-handout.tarfiletothestudents.
+Copy the handout file to a protected directory on the Linux machine where you plan to do your work, and
+thenissuethefollowingcommand:
+linux> tar xvf proxylab-handout.tar
+This will generate a handout directory called proxylab-handout. The README file describes the
+variousfiles.
+4 Part I: Implementing a sequential web proxy
+ThefirststepisimplementingabasicsequentialproxythathandlesHTTP/1.0GETrequests. Otherrequests
+type,suchasPOST,arestrictlyoptional.
+Whenstarted,yourproxyshouldlistenforincomingconnectionsonaportwhosenumberwillbespecified
+on the command line. Once a connection is established, your proxy should read the entirety of the request
+fromtheclientandparsetherequest. ItshoulddeterminewhethertheclienthassentavalidHTTPrequest;
+ifso,itcanthenestablishitsownconnectiontotheappropriatewebserverthenrequesttheobjecttheclient
+specified. Finally,yourproxyshouldreadtheserver’sresponseandforwardittotheclient.
+4.1 HTTP/1.0GETrequests
+When an end user enters a URL such as http://www.cmu.edu/hub/index.html into the address
+barofawebbrowser,thebrowserwillsendanHTTPrequesttotheproxythatbeginswithalinethatmight
+resemblethefollowing:
+GET http://www.cmu.edu/hub/index.html HTTP/1.1
+Inthatcase,theproxyshouldparsetherequestintoatleastthefollowingfields: thehostname,www.cmu.edu;
+and the path or query and everything following it, /hub/index.html. That way, the proxy can deter-
+minethatitshouldopenaconnectiontowww.cmu.eduandsendanHTTPrequestofitsownstartingwith
+alineofthefollowingform:
+GET /hub/index.html HTTP/1.0
+NotethatalllinesinanHTTPrequestendwithacarriagereturn,‘\r’,followedbyanewline,‘\n’. Also
+importantisthateveryHTTPrequestisterminatedbyanemptyline: "\r\n".
+2
+
+===== PAGE 3 =====
+You should notice in the above example that the web browser’s request line ends with HTTP/1.1, while
+theproxy’srequestlineendswithHTTP/1.0. ModernwebbrowserswillgenerateHTTP/1.1requests,but
+yourproxyshouldhandlethemandforwardthemasHTTP/1.0requests.
+It is important to consider that HTTP requests, even just the subset of HTTP/1.0 GET requests, can be
+incredibly complicated. The textbook describes certain details of HTTP transactions, but you should refer
+to RFC 1945 for the complete HTTP/1.0 specification. Ideally your HTTP request parser will be fully
+robustaccordingtotherelevantsectionsofRFC1945,exceptforonedetail: whilethespecificationallows
+for multiline request fields, your proxy is not required to properly handle them. Of course, your proxy
+shouldneverprematurelyabortduetoamalformedrequest.
+4.2 Requestheaders
+TheimportantrequestheadersforthislabaretheHost,User-Agent,Connection,andProxy-Connection
+headers:
+• Always send a Host header. While this behavior is technically not sanctioned by the HTTP/1.0
+specification, it is necessary to coax sensible responses out of certain Web servers, especially those
+thatusevirtualhosting.
+TheHostheaderdescribesthehostnameoftheendserver. Forexample, toaccesshttp://www.
+cmu.edu/hub/index.html,yourproxywouldsendthefollowingheader:
+Host: www.cmu.edu
+ItispossiblethatwebbrowserswillattachtheirownHostheaderstotheirHTTPrequests. Ifthatis
+thecase,yourproxyshouldusethesameHostheaderasthebrowser.
+• YoumaychoosetoalwayssendthefollowingUser-Agentheader:
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3)
+Gecko/20120305 Firefox/10.0.3
+Theheaderisprovidedontwoseparatelinesbecauseitdoesnotfitasasinglelineinthewriteup,but
+yourproxyshouldsendtheheaderasasingleline.
+The User-Agent header identifies the client (in terms of parameters such as the operating system
+and browser), and web servers often use the identifying information to manipulate the content they
+serve. SendingthisparticularUser-Agent: stringmayimprove,incontentanddiversity,thematerial
+thatyougetbackduringsimpletelnet-styletesting.
+• AlwayssendthefollowingConnectionheader:
+Connection: close
+• AlwayssendthefollowingProxy-Connectionheader:
+3
+
+===== PAGE 4 =====
+Proxy-Connection: close
+The Connection and Proxy-Connection headers are used to specify whether a connection
+will be kept alive after the first request/response exchange is completed. It is perfectly acceptable
+(and suggested) to have your proxy open a new connection for each request. Specifying close as
+the value of these headers alerts web servers that your proxy intends to close connections after the
+firstrequest/responseexchange.
+For your convenience, the values of the described User-Agent header is provided to you as a string
+constantinproxy.c.
+Finally, if a browser sends any additional request headers as part of an HTTP request, your proxy should
+forwardthemunchanged.
+4.3 Portnumbers
+Therearetwosignificantclassesofportnumbersforthislab: HTTPrequestportsandyourproxy’slistening
+port.
+TheHTTPrequestportisanoptionalfieldintheURLofanHTTPrequest. Thatis,theURLmaybeofthe
+form, http://www.cmu.edu:8080/hub/index.html, in which case your proxy should connect
+to the host www.cmu.edu on port 8080 instead of the default HTTP port, which is port 80. Your proxy
+mustproperlyfunctionwhetherornottheportnumberisincludedintheURL.
+The listening port is the port on which your proxy should listen for incoming connections. Your proxy
+shouldacceptacommandlineargumentspecifyingthelisteningportnumberforyourproxy. Forexample,
+withthefollowingcommand,yourproxyshouldlistenforconnectionsonport15213:
+linux> ./proxy 15213
+You may select any non-privileged listening port (greater than 1,024 and less than 65,536) as long as it
+is not used by other processes. Since each proxy must use a unique listening port and many people will
+simultaneously be working on each machine, the script port-for-user.pl is provided to help you
+pickyourownpersonalportnumber. UseittogenerateportnumberbasedonyouruserID:
+linux> ./port-for-user.pl droh
+droh: 45806
+The port, p, returned by port-for-user.pl is always an even number. So if you need an additional
+portnumber,sayfortheTiny server,youcansafelyuseportspandp+1.
+Pleasedon’tpickyourownrandomport. Ifyoudo,youruntheriskofinterferingwithanotheruser.
+4
+
+===== PAGE 5 =====
+5 Part II: Dealing with multiple concurrent requests
+Once you have a working sequential proxy, you should alter it to simultaneously handle multiple requests.
+Thesimplestwaytoimplementaconcurrentserveristospawnanewthreadtohandleeachnewconnection
+request. Otherdesignsarealsopossible,suchastheprethreadedserverdescribedinSection12.5.5ofyour
+textbook.
+• Notethatyourthreadsshouldrunindetachedmodetoavoidmemoryleaks.
+• The open clientfd and open listenfd functions described in the CS:APP3e textbook are
+basedonthemodernandprotocol-independentgetaddrinfofunction,andthusarethreadsafe.
+6 Part III: Caching web objects
+For the final part of the lab, you will add a cache to your proxy that stores recently-used Web objects in
+memory. HTTP actually defines a fairly complex model by which web servers can give instructions as to
+how the objects they serve should be cached and clients can specify how caches should be used on their
+behalf. However,yourproxywilladoptasimplifiedapproach.
+Whenyourproxyreceivesawebobjectfromaserver,itshouldcacheitinmemoryasittransmitstheobject
+totheclient. Ifanotherclientrequeststhesameobjectfromthesameserver,yourproxyneednotreconnect
+totheserver;itcansimplyresendthecachedobject.
+Obviously, if your proxy were to cache every object that is ever requested, it would require an unlimited
+amount of memory. Moreover, because some web objects are larger than others, it might be the case that
+onegiantobjectwillconsumetheentirecache,preventingotherobjectsfrombeingcachedatall. Toavoid
+thoseproblems,yourproxyshouldhavebothamaximumcachesizeandamaximumcacheobjectsize.
+6.1 Maximumcachesize
+Theentiretyofyourproxy’scacheshouldhavethefollowingmaximumsize:
+MAX_CACHE_SIZE = 1 MiB
+Whencalculatingthesizeofitscache,yourproxymustonlycountbytesusedtostoretheactualwebobjects;
+anyextraneousbytes,includingmetadata,shouldbeignored.
+6.2 Maximumobjectsize
+Yourproxyshouldonlycachewebobjectsthatdonotexceedthefollowingmaximumsize:
+MAX_OBJECT_SIZE = 100 KiB
+5
+
+===== PAGE 6 =====
+Foryourconvenience,bothsizelimitsareprovidedasmacrosinproxy.c.
+Theeasiestwaytoimplementacorrectcacheistoallocateabufferforeachactiveconnectionandaccumu-
+latedataasitisreceivedfromtheserver. Ifthesizeofthebuffereverexceedsthemaximumobjectsize,the
+buffercanbediscarded. Iftheentiretyofthewebserver’sresponseisreadbeforethemaximumobjectsize
+is exceeded, then the object can be cached. Using this scheme, the maximum amount of data your proxy
+willeveruseforwebobjectsisthefollowing,whereTisthemaximumnumberofactiveconnections:
+MAX_CACHE_SIZE + T * MAX_OBJECT_SIZE
+6.3 Evictionpolicy
+Yourproxy’scacheshouldemployanevictionpolicythatapproximatesaleast-recently-used(LRU)eviction
+policy. It doesn’t have to be strictly LRU, but it should be something reasonably close. Note that both
+readinganobjectandwritingitcountasusingtheobject.
+6.4 Synchronization
+Accesses to the cache must be thread-safe, and ensuring that cache access is free of race conditions will
+likelybethemoreinterestingaspectofthispartofthelab. Asamatteroffact,thereisaspecialrequirement
+thatmultiplethreadsmustbeabletosimultaneouslyreadfromthecache. Ofcourse,onlyonethreadshould
+bepermittedtowritetothecacheatatime,butthatrestrictionmustnotexistforreaders.
+As such, protecting accesses to the cache with one large exclusive lock is not an acceptable solution. You
+may want to explore options such as partitioning the cache, using Pthreads readers-writers locks, or using
+semaphores to implement your own readers-writers solution. In either case, the fact that you don’t have to
+implementastrictlyLRUevictionpolicywillgiveyousomeflexibilityinsupportingmultiplereaders.
+7 Evaluation
+Thisassignmentwillbegradedoutofatotalof70points:
+• BasicCorrectness: 40pointsforbasicproxyoperation(autograded)
+• Concurrency: 15pointsforhandlingconcurrentrequests(autograded)
+• Cache: 15pointsforaworkingcache(autograded)
+7.1 Autograding
+Your handout materials include an autograder, called driver.sh, that your instructor will use to assign
+scoresforBasicCorrectness,Concurrency,andCache. Fromtheproxylab-handoutdirectory:
+linux> ./driver.sh
+6
+
+===== PAGE 7 =====
+YoumustrunthedriveronaLinuxmachine.
+7.2 Robustness
+As always, you must deliver a program that is robust to errors and even malformed or malicious input.
+Serversaretypicallylong-runningprocesses,andwebproxiesarenoexception. Thinkcarefullyabouthow
+long-running processes should react to different types of errors. For many kinds of errors, it is certainly
+inappropriateforyourproxytoimmediatelyexit.
+Robustness implies other requirements as well, including invulnerability to error cases like segmentation
+faultsandalackofmemoryleaksandfiledescriptorleaks.
+8 Testing and debugging
+Besides the simple autograder, you will not have any sample inputs or a test program to test your imple-
+mentation. Youwillhavetocomeupwithyourowntestsandperhapsevenyourowntestingharnesstohelp
+youdebugyourcodeanddecidewhenyouhaveacorrectimplementation. Thisisavaluableskillinthereal
+world,whereexactoperatingconditionsarerarelyknownandreferencesolutionsareoftenunavailable.
+Fortunatelytherearemanytoolsyoucanusetodebugandtestyourproxy. Besuretoexerciseallcodepaths
+andtestarepresentativesetofinputs,includingbasecases,typicalcases,andedgecases.
+8.1 Tinywebserver
+YourhandoutdirectorythesourcecodefortheCS:APPTinywebserver. Whilenotaspowerfulasthttpd,
+the CS:APP Tiny web server will be easy for you to modify as you see fit. It’s also a reasonable starting
+pointforyourproxycode. Andit’stheserverthatthedrivercodeusestofetchpages.
+8.2 telnet
+Asdescribedinyourtextbook(11.5.3),youcanusetelnettoopenaconnectiontoyourproxyandsend
+itHTTPrequests.
+8.3 curl
+You can use curl to generate HTTP requests to any server, including your own proxy. It is an extremely
+usefuldebuggingtool. Forexample,ifyourproxyandTinyarebothrunningonthelocalmachine,Tinyis
+listening on port 15213, and proxy is listening on port 15214, then you can request a page from Tiny via
+yourproxyusingthefollowingcurlcommand:
+linux> curl -v --proxy http://localhost:15214 http://localhost:15213/home.html
+* About to connect() to proxy localhost port 15214 (#0)
+* Trying 127.0.0.1... connected
+7
+
+===== PAGE 8 =====
+* Connected to localhost (127.0.0.1) port 15214 (#0)
+> GET http://localhost:15213/home.html HTTP/1.1
+> User-Agent: curl/7.19.7 (x86_64-redhat-linux-gnu)...
+> Host: localhost:15213
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+>
+* HTTP 1.0, assume close after body
+< HTTP/1.0 200 OK
+< Server: Tiny Web Server
+< Content-length: 120
+< Content-type: text/html
+<
+<html>
+<head><title>test</title></head>
+<body>
+<img align="middle" src="godzilla.gif">
+Dave O’Hallaron
+</body>
+</html>
+* Closing connection #0
+8.4 netcat
+netcat,alsoknownasnc,isaversatilenetworkutility. Youcanusenetcatjustliketelnet,toopen
+connections to servers. Hence, imagining that your proxy were running on catshark using port 12345
+youcandosomethinglikethefollowingtomanuallytestyourproxy:
+sh> nc catshark.ics.cs.cmu.edu 12345
+GET http://www.cmu.edu/hub/index.html HTTP/1.0
+HTTP/1.1 200 OK
+...
+In addition to being able to connect to Web servers, netcat can also operate as a server itself. With the
+followingcommand,youcanrunnetcatasaserverlisteningonport12345:
+sh> nc -l 12345
+Once you have set up a netcat server, you can generate a request to a phony object on it through your
+proxy,andyouwillbeabletoinspecttheexactrequestthatyourproxysenttonetcat.
+8.5 Webbrowsers
+EventuallyyoushouldtestyourproxyusingthemostrecentversionofMozillaFirefox. VisitingAbout Firefox
+willautomaticallyupdateyourbrowsertothemostrecentversion.
+8
+
+===== PAGE 9 =====
+ToconfigureFirefoxtoworkwithaproxy,visit
+Preferences>Advanced>Network>Settings
+ItwillbeveryexcitingtoseeyourproxyworkingthrougharealWebbrowser. Althoughthefunctionalityof
+yourproxywillbelimited,youwillnoticethatyouareabletobrowsethevastmajorityofwebsitesthrough
+yourproxy.
+AnimportantcaveatisthatyoumustbeverycarefulwhentestingcachingusingaWebbrowser. Allmodern
+Web browsers have caches of their own, which you should disable before attempting to test your proxy’s
+cache.
+9 Handin instructions
+The provided Makefile includes functionality to build your final handin file. Issue the following command
+fromyourworkingdirectory:
+linux> make handin
+Theoutputisthefile../proxylab-handin.tar,whichyoucanthenhandin.
+SITE-SPECIFIC: Insert a paragraph here that tells each student how to hand in their
+proxylab-handin.tarsolutionfile.
+• Chapters 10-12 of the textbook contains useful information on system-level I/O, network program-
+ming,HTTPprotocols,andconcurrentprogramming.
+• RFC1945(http://www.ietf.org/rfc/rfc1945.txt)isthecompletespecificationforthe
+HTTP/1.0protocol.
+10 Hints
+• As discussed in Section 10.11 of your textbook, using standard I/O functions for socket input and
+output is a problem. Instead, we recommend that you use the Robust I/O (RIO) package, which is
+providedinthecsapp.cfileinthehandoutdirectory.
+• Theerror-handlingfunctionsprovideincsapp.carenotappropriateforyourproxybecauseoncea
+server begins accepting connections, it is not supposed to terminate. You’ll need to modify them or
+writeyourown.
+• Youarefreetomodifythefilesinthehandoutdirectoryanywayyoulike. Forexample,forthesake
+ofgoodmodularity,youmightimplementyourcachefunctionsasalibraryinfilescalledcache.c
+andcache.h. Ofcourse,addingnewfileswillrequireyoutoupdatetheprovidedMakefile.
+9
+
+===== PAGE 10 =====
+• AsdiscussedintheAsideonpage964oftheCS:APP3etext,yourproxymustignoreSIGPIPEsignals
+andshoulddealgracefullywithwriteoperationsthatreturnEPIPEerrors.
+• Sometimes,callingreadtoreceivebytesfromasocketthathasbeenprematurelyclosedwillcause
+read to return -1 with errno set to ECONNRESET. Your proxy should not terminate due to this
+erroreither.
+• Remember that not all content on the web is ASCII text. Much of the content on the web is binary
+data, such as images and video. Ensure that you account for binary data when selecting and using
+functionsfornetworkI/O.
+• ForwardallrequestsasHTTP/1.0eveniftheoriginalrequestwasHTTP/1.1.
+Goodluck!
+10
