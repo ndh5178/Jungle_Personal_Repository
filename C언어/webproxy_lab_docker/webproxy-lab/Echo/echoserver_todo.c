@@ -104,6 +104,7 @@ void echo(int connfd)
      * 여기서는 아직 데이터를 읽지 않는다.
      * rio라는 읽기 상태 구조체를 connfd와 연결해두는 단계다.
      */
+    Rio_readinitb(&rio,connfd);
 
     /*
      * TODO 5. 클라이언트가 연결을 끊을 때까지 한 줄씩 읽는다.
@@ -121,6 +122,7 @@ void echo(int connfd)
      *   - 클라이언트가 연결을 끊으면 0을 리턴한다.
      */
 
+
     /*
      * TODO 6. 반복문 안에서 몇 바이트를 받았는지 출력한다.
      *
@@ -137,4 +139,10 @@ void echo(int connfd)
      *
      *   클라이언트가 줄을 보냄 -> 서버가 같은 줄을 다시 보냄
      */
+    while ((n=Rio_readlineb(&rio,buf,MAXLINE))!=0){
+        printf("server received %d bytes\n",(int)n);
+        Rio_writen(connfd,buf,n);
+    }
+
+    
 }
