@@ -1,0 +1,31 @@
+YoumustrunthedriveronaLinuxmachine.
+7.2 Robustness
+As always, you must deliver a program that is robust to errors and even malformed or malicious input.
+Serversaretypicallylong-runningprocesses,andwebproxiesarenoexception. Thinkcarefullyabouthow
+long-running processes should react to different types of errors. For many kinds of errors, it is certainly
+inappropriateforyourproxytoimmediatelyexit.
+Robustness implies other requirements as well, including invulnerability to error cases like segmentation
+faultsandalackofmemoryleaksandfiledescriptorleaks.
+8 Testing and debugging
+Besides the simple autograder, you will not have any sample inputs or a test program to test your imple-
+mentation. Youwillhavetocomeupwithyourowntestsandperhapsevenyourowntestingharnesstohelp
+youdebugyourcodeanddecidewhenyouhaveacorrectimplementation. Thisisavaluableskillinthereal
+world,whereexactoperatingconditionsarerarelyknownandreferencesolutionsareoftenunavailable.
+Fortunatelytherearemanytoolsyoucanusetodebugandtestyourproxy. Besuretoexerciseallcodepaths
+andtestarepresentativesetofinputs,includingbasecases,typicalcases,andedgecases.
+8.1 Tinywebserver
+YourhandoutdirectorythesourcecodefortheCS:APPTinywebserver. Whilenotaspowerfulasthttpd,
+the CS:APP Tiny web server will be easy for you to modify as you see fit. It’s also a reasonable starting
+pointforyourproxycode. Andit’stheserverthatthedrivercodeusestofetchpages.
+8.2 telnet
+Asdescribedinyourtextbook(11.5.3),youcanusetelnettoopenaconnectiontoyourproxyandsend
+itHTTPrequests.
+8.3 curl
+You can use curl to generate HTTP requests to any server, including your own proxy. It is an extremely
+usefuldebuggingtool. Forexample,ifyourproxyandTinyarebothrunningonthelocalmachine,Tinyis
+listening on port 15213, and proxy is listening on port 15214, then you can request a page from Tiny via
+yourproxyusingthefollowingcurlcommand:
+linux> curl -v --proxy http://localhost:15214 http://localhost:15213/home.html
+* About to connect() to proxy localhost port 15214 (#0)
+* Trying 127.0.0.1... connected
+7

@@ -1,0 +1,11 @@
+• AsdiscussedintheAsideonpage964oftheCS:APP3etext,yourproxymustignoreSIGPIPEsignals
+andshoulddealgracefullywithwriteoperationsthatreturnEPIPEerrors.
+• Sometimes,callingreadtoreceivebytesfromasocketthathasbeenprematurelyclosedwillcause
+read to return -1 with errno set to ECONNRESET. Your proxy should not terminate due to this
+erroreither.
+• Remember that not all content on the web is ASCII text. Much of the content on the web is binary
+data, such as images and video. Ensure that you account for binary data when selecting and using
+functionsfornetworkI/O.
+• ForwardallrequestsasHTTP/1.0eveniftheoriginalrequestwasHTTP/1.1.
+Goodluck!
+10

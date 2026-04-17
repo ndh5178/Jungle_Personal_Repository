@@ -1,0 +1,38 @@
+* Connected to localhost (127.0.0.1) port 15214 (#0)
+> GET http://localhost:15213/home.html HTTP/1.1
+> User-Agent: curl/7.19.7 (x86_64-redhat-linux-gnu)...
+> Host: localhost:15213
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+>
+* HTTP 1.0, assume close after body
+< HTTP/1.0 200 OK
+< Server: Tiny Web Server
+< Content-length: 120
+< Content-type: text/html
+<
+<html>
+<head><title>test</title></head>
+<body>
+<img align="middle" src="godzilla.gif">
+Dave O’Hallaron
+</body>
+</html>
+* Closing connection #0
+8.4 netcat
+netcat,alsoknownasnc,isaversatilenetworkutility. Youcanusenetcatjustliketelnet,toopen
+connections to servers. Hence, imagining that your proxy were running on catshark using port 12345
+youcandosomethinglikethefollowingtomanuallytestyourproxy:
+sh> nc catshark.ics.cs.cmu.edu 12345
+GET http://www.cmu.edu/hub/index.html HTTP/1.0
+HTTP/1.1 200 OK
+...
+In addition to being able to connect to Web servers, netcat can also operate as a server itself. With the
+followingcommand,youcanrunnetcatasaserverlisteningonport12345:
+sh> nc -l 12345
+Once you have set up a netcat server, you can generate a request to a phony object on it through your
+proxy,andyouwillbeabletoinspecttheexactrequestthatyourproxysenttonetcat.
+8.5 Webbrowsers
+EventuallyyoushouldtestyourproxyusingthemostrecentversionofMozillaFirefox. VisitingAbout Firefox
+willautomaticallyupdateyourbrowsertothemostrecentversion.
+8

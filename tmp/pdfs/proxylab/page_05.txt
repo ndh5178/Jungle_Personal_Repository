@@ -1,0 +1,29 @@
+5 Part II: Dealing with multiple concurrent requests
+Once you have a working sequential proxy, you should alter it to simultaneously handle multiple requests.
+Thesimplestwaytoimplementaconcurrentserveristospawnanewthreadtohandleeachnewconnection
+request. Otherdesignsarealsopossible,suchastheprethreadedserverdescribedinSection12.5.5ofyour
+textbook.
+• Notethatyourthreadsshouldrunindetachedmodetoavoidmemoryleaks.
+• The open clientfd and open listenfd functions described in the CS:APP3e textbook are
+basedonthemodernandprotocol-independentgetaddrinfofunction,andthusarethreadsafe.
+6 Part III: Caching web objects
+For the final part of the lab, you will add a cache to your proxy that stores recently-used Web objects in
+memory. HTTP actually defines a fairly complex model by which web servers can give instructions as to
+how the objects they serve should be cached and clients can specify how caches should be used on their
+behalf. However,yourproxywilladoptasimplifiedapproach.
+Whenyourproxyreceivesawebobjectfromaserver,itshouldcacheitinmemoryasittransmitstheobject
+totheclient. Ifanotherclientrequeststhesameobjectfromthesameserver,yourproxyneednotreconnect
+totheserver;itcansimplyresendthecachedobject.
+Obviously, if your proxy were to cache every object that is ever requested, it would require an unlimited
+amount of memory. Moreover, because some web objects are larger than others, it might be the case that
+onegiantobjectwillconsumetheentirecache,preventingotherobjectsfrombeingcachedatall. Toavoid
+thoseproblems,yourproxyshouldhavebothamaximumcachesizeandamaximumcacheobjectsize.
+6.1 Maximumcachesize
+Theentiretyofyourproxy’scacheshouldhavethefollowingmaximumsize:
+MAX_CACHE_SIZE = 1 MiB
+Whencalculatingthesizeofitscache,yourproxymustonlycountbytesusedtostoretheactualwebobjects;
+anyextraneousbytes,includingmetadata,shouldbeignored.
+6.2 Maximumobjectsize
+Yourproxyshouldonlycachewebobjectsthatdonotexceedthefollowingmaximumsize:
+MAX_OBJECT_SIZE = 100 KiB
+5

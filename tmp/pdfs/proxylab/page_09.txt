@@ -1,0 +1,30 @@
+ToconfigureFirefoxtoworkwithaproxy,visit
+Preferences>Advanced>Network>Settings
+ItwillbeveryexcitingtoseeyourproxyworkingthrougharealWebbrowser. Althoughthefunctionalityof
+yourproxywillbelimited,youwillnoticethatyouareabletobrowsethevastmajorityofwebsitesthrough
+yourproxy.
+AnimportantcaveatisthatyoumustbeverycarefulwhentestingcachingusingaWebbrowser. Allmodern
+Web browsers have caches of their own, which you should disable before attempting to test your proxy’s
+cache.
+9 Handin instructions
+The provided Makefile includes functionality to build your final handin file. Issue the following command
+fromyourworkingdirectory:
+linux> make handin
+Theoutputisthefile../proxylab-handin.tar,whichyoucanthenhandin.
+SITE-SPECIFIC: Insert a paragraph here that tells each student how to hand in their
+proxylab-handin.tarsolutionfile.
+• Chapters 10-12 of the textbook contains useful information on system-level I/O, network program-
+ming,HTTPprotocols,andconcurrentprogramming.
+• RFC1945(http://www.ietf.org/rfc/rfc1945.txt)isthecompletespecificationforthe
+HTTP/1.0protocol.
+10 Hints
+• As discussed in Section 10.11 of your textbook, using standard I/O functions for socket input and
+output is a problem. Instead, we recommend that you use the Robust I/O (RIO) package, which is
+providedinthecsapp.cfileinthehandoutdirectory.
+• Theerror-handlingfunctionsprovideincsapp.carenotappropriateforyourproxybecauseoncea
+server begins accepting connections, it is not supposed to terminate. You’ll need to modify them or
+writeyourown.
+• Youarefreetomodifythefilesinthehandoutdirectoryanywayyoulike. Forexample,forthesake
+ofgoodmodularity,youmightimplementyourcachefunctionsasalibraryinfilescalledcache.c
+andcache.h. Ofcourse,addingnewfileswillrequireyoutoupdatetheprovidedMakefile.
+9
