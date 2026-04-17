@@ -1,4 +1,4 @@
-#include "csapp.h"
+#include "../csapp.h"
 
 /*
  * 선택 연습용 Echo 클라이언트.
@@ -32,6 +32,10 @@ int main(int argc, char **argv)
      *   - stderr에 사용법을 출력한다.
      *   - exit으로 프로그램을 종료한다.
      */
+    if(argc!=3){
+        fprintf(stderr,"usage: %s <host> <port>\n", argv[0]);
+        exit(1);
+    }
 
     /*
      * TODO 2. argv[1]과 argv[2]를 변수에 저장한다.
@@ -39,6 +43,8 @@ int main(int argc, char **argv)
      * host = argv[1]
      * port = argv[2]
      */
+    host=argv[1];
+    port=argv[2];
 
     /*
      * TODO 3. 서버에 접속한다.
@@ -50,13 +56,14 @@ int main(int argc, char **argv)
      *
      * 서버 입장에서는 이 연결이 Accept를 통해 connfd로 보인다.
      */
+    clientfd=Open_clientfd(host,port);
 
     /*
      * TODO 4. clientfd에 대한 RIO 버퍼를 초기화한다.
      *
      * Rio_readinitb(&rio, clientfd)를 사용한다.
      */
-
+    Rio_readinitb(&rio, clientfd);
     /*
      * TODO 5. 키보드 입력을 한 줄씩 반복해서 처리한다.
      *
@@ -70,10 +77,18 @@ int main(int argc, char **argv)
      *   2. Rio_readlineb(&rio, buf, MAXLINE)으로 서버가 돌려준 한 줄을 읽는다.
      *   3. Fputs(buf, stdout)으로 화면에 출력한다.
      */
+    while (Fgets(buf,MAXLINE,stdin)!=NULL)
+    {
+        Rio_writen(clientfd, buf, strlen(buf));
+        Rio_readlineb(&rio, buf, MAXLINE);
+        Fputs(buf, stdout);
+    }
+    
 
     /*
      * TODO 6. 프로그램을 끝내기 전에 clientfd를 닫는다.
      */
+    Close(clientfd);
 
     return 0;
 }
