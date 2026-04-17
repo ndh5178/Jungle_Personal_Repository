@@ -1,5 +1,6 @@
 #include "../csapp.h"
-
+#include <stdio.h>
+#include <string.h>
 /*
  * Echo 서버 연습.
  *
@@ -13,8 +14,15 @@
  * 다만 Tiny의 doit()보다 처리 내용이 훨씬 단순하다.
  */
 
-void echo(int connfd);
+typedef struct {
+    int choseong;
+    int jungseong;
+    int jongseong;
+} HangulState;
 
+
+void echo(int connfd);
+void eng_to_hangul_simple(const char *in, char *out);
 int main(int argc, char **argv)
 {
     int listenfd;
@@ -83,7 +91,9 @@ int main(int argc, char **argv)
         Getnameinfo((SA *)&clientaddr, clientlen, &client_hostname[0], MAXLINE, &client_port[0], MAXLINE,0);
         printf("Accepted connection from (%s, %s)\n", client_hostname, client_port);
         echo(connfd);
+        printf("Closeed connection from (%s, %s)\n", client_hostname, client_port);
         Close(connfd);
+
     }
     
 
@@ -93,7 +103,7 @@ int main(int argc, char **argv)
 void echo(int connfd)
 {
     size_t n;
-    char buf[MAXLINE];
+    char buf[MAXLINE],result[MAXLINE];
     rio_t rio;
 
     /*
@@ -105,7 +115,6 @@ void echo(int connfd)
      * rio라는 읽기 상태 구조체를 connfd와 연결해두는 단계다.
      */
     Rio_readinitb(&rio,connfd);
-
     /*
      * TODO 5. 클라이언트가 연결을 끊을 때까지 한 줄씩 읽는다.
      *
@@ -141,8 +150,135 @@ void echo(int connfd)
      */
     while ((n=Rio_readlineb(&rio,buf,MAXLINE))!=0){
         printf("server received %d bytes\n",(int)n);
-        Rio_writen(connfd,buf,n);
+        eng_to_hangul_simple(buf,result);
+        Rio_writen(connfd,result,strlen(result));
+    }
+}
+
+
+int key_to_choseong(char c)
+{
+    switch (c) {
+    case 'r': return 0;   // ㄱ
+    case 'R': return 1;   // ㄲ
+    case 's': return 2;   // ㄴ
+    case 'e': return 3;   // ㄷ
+    case 'E': return 4;   // ㄸ
+    case 'f': return 5;   // ㄹ
+    case 'a': return 6;   // ㅁ
+    case 'q': return 7;   // ㅂ
+    case 'Q': return 8;   // ㅃ
+    case 't': return 9;   // ㅅ
+    case 'T': return 10;  // ㅆ
+    case 'd': return 11;  // ㅇ
+    case 'w': return 12;  // ㅈ
+    case 'W': return 13;  // ㅉ
+    case 'c': return 14;  // ㅊ
+    case 'z': return 15;  // ㅋ
+    case 'x': return 16;  // ㅌ
+    case 'v': return 17;  // ㅍ
+    case 'g': return 18;  // ㅎ
+    default: return -1;
+    }
+}
+
+int key_to_jungseong(char c)
+{
+    switch (c) {
+    case 'k': return 0;   // ㅏ
+    case 'o': return 1;   // ㅐ
+    case 'i': return 2;   // ㅑ
+    case 'O': return 3;   // ㅒ
+    case 'j': return 4;   // ㅓ
+    case 'p': return 5;   // ㅔ
+    case 'u': return 6;   // ㅕ
+    case 'P': return 7;   // ㅖ
+    case 'h': return 8;   // ㅗ
+    case 'y': return 12;  // ㅛ
+    case 'n': return 13;  // ㅜ
+    case 'b': return 17;  // ㅠ
+    case 'm': return 18;  // ㅡ
+    case 'l': return 20;  // ㅣ
+    default: return -1;
+    }
+}
+
+int choseong_to_jongseong(int choseong)
+{
+    switch (choseong) {
+    case 0: return 1;    // ㄱ
+    case 1: return 2;    // ㄲ
+    case 2: return 4;    // ㄴ
+    case 3: return 7;    // ㄷ
+    case 5: return 8;    // ㄹ
+    case 6: return 16;   // ㅁ
+    case 7: return 17;   // ㅂ
+    case 9: return 19;   // ㅅ
+    case 10: return 20;  // ㅆ
+    case 11: return 21;  // ㅇ
+    case 12: return 22;  // ㅈ
+    case 14: return 23;  // ㅊ
+    case 15: return 24;  // ㅋ
+    case 16: return 25;  // ㅌ
+    case 17: return 26;  // ㅍ
+    case 18: return 27;  // ㅎ
+    default: return -1;
+    }
+}
+
+void append_utf8(char *out, int *out_len, int codepoint)
+{
+    if (codepoint <= 0x7F) {
+        out[(*out_len)++] = codepoint;
+    } else if (codepoint <= 0x7FF) {
+        out[(*out_len)++] = 0xC0 | ((codepoint >> 6) & 0x1F);
+        out[(*out_len)++] = 0x80 | (codepoint & 0x3F);
+    } else {
+        out[(*out_len)++] = 0xE0 | ((codepoint >> 12) & 0x0F);
+        out[(*out_len)++] = 0x80 | ((codepoint >> 6) & 0x3F);
+        out[(*out_len)++] = 0x80 | (codepoint & 0x3F);
+    }
+}
+
+void append_hangul_syllable(char *out, int *out_len,
+                            int cho, int jung, int jong)
+{
+    int codepoint = 0xAC00 + (cho * 21 + jung) * 28 + jong;
+    append_utf8(out, out_len, codepoint);
+}
+
+void eng_to_hangul_simple(const char *in, char *out)
+{
+    int i = 0;
+    int out_len = 0;
+
+    while (in[i] != '\0') {
+        int cho = key_to_choseong(in[i]);
+        int jung = key_to_jungseong(in[i + 1]);
+
+        if (cho != -1 && jung != -1) {
+            int jong = 0;
+            int next_cho = key_to_choseong(in[i + 2]);
+            int next_jung = key_to_jungseong(in[i + 3]);
+
+            if (next_cho != -1 && next_jung == -1) {
+                int possible_jong = choseong_to_jongseong(next_cho);
+                if (possible_jong != -1) {
+                    jong = possible_jong;
+                    i += 3;
+                } else {
+                    i += 2;
+                }
+            } else {
+                i += 2;
+            }
+
+            append_hangul_syllable(out, &out_len, cho, jung, jong);
+        } else {
+            out[out_len++] = in[i];
+            i++;
+        }
     }
 
-    
+    out[out_len] = '\0';
 }
