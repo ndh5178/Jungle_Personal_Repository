@@ -1,14 +1,14 @@
 #include "csapp.h"
 
 /*
- * Optional echo client practice.
+ * 선택 연습용 Echo 클라이언트.
  *
- * This client:
- * - Connects to an echo server.
- * - Reads one line from stdin.
- * - Sends that line to the server.
- * - Reads the echoed line from the server.
- * - Prints it to stdout.
+ * 이 클라이언트가 하는 일:
+ * - Echo 서버에 접속한다.
+ * - 키보드에서 한 줄을 입력받는다.
+ * - 그 줄을 서버로 보낸다.
+ * - 서버가 그대로 돌려준 줄을 읽는다.
+ * - 화면에 출력한다.
  */
 
 int main(int argc, char **argv)
@@ -20,59 +20,60 @@ int main(int argc, char **argv)
     rio_t rio;
 
     /*
-     * TODO 1. Check command-line arguments.
+     * TODO 1. 명령행 인자 개수를 확인한다.
      *
-     * Expected command:
+     * 기대하는 실행 명령:
      *   ./echoclient <host> <port>
      *
-     * Example:
+     * 예시:
      *   ./echoclient localhost 8000
      *
-     * If argc is not 3:
-     *   - print usage to stderr
-     *   - exit
+     * argc가 3이 아니면:
+     *   - stderr에 사용법을 출력한다.
+     *   - exit으로 프로그램을 종료한다.
      */
 
     /*
-     * TODO 2. Save argv[1] and argv[2].
+     * TODO 2. argv[1]과 argv[2]를 변수에 저장한다.
      *
      * host = argv[1]
      * port = argv[2]
      */
 
     /*
-     * TODO 3. Connect to the server.
+     * TODO 3. 서버에 접속한다.
      *
-     * Use Open_clientfd(host, port).
+     * Open_clientfd(host, port)를 사용한다.
      *
-     * Result:
-     *   clientfd is a connected socket descriptor.
+     * 결과:
+     *   clientfd는 서버와 연결된 소켓 번호다.
+     *
+     * 서버 입장에서는 이 연결이 Accept를 통해 connfd로 보인다.
      */
 
     /*
-     * TODO 4. Initialize an RIO buffer for clientfd.
+     * TODO 4. clientfd에 대한 RIO 버퍼를 초기화한다.
      *
-     * Use Rio_readinitb(&rio, clientfd).
+     * Rio_readinitb(&rio, clientfd)를 사용한다.
      */
 
     /*
-     * TODO 5. Loop over stdin.
+     * TODO 5. 키보드 입력을 한 줄씩 반복해서 처리한다.
      *
-     * Use:
+     * 아래 형태를 사용한다.
      *   while (Fgets(buf, MAXLINE, stdin) != NULL) {
      *       ...
      *   }
      *
-     * Each iteration:
-     *   1. Write buf to the server with Rio_writen(clientfd, buf, strlen(buf)).
-     *   2. Read one echoed line from the server with Rio_readlineb(&rio, buf, MAXLINE).
-     *   3. Print buf to stdout with Fputs(buf, stdout).
+     * 반복문 한 번마다 할 일:
+     *   1. Rio_writen(clientfd, buf, strlen(buf))로 서버에 buf를 보낸다.
+     *   2. Rio_readlineb(&rio, buf, MAXLINE)으로 서버가 돌려준 한 줄을 읽는다.
+     *   3. Fputs(buf, stdout)으로 화면에 출력한다.
      */
 
     /*
-     * TODO 6. Close clientfd before exiting.
+     * TODO 6. 프로그램을 끝내기 전에 clientfd를 닫는다.
      */
 
     return 0;
 }
-
