@@ -350,109 +350,24 @@ void read_requesthdrs(rio_t *rp)
 
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
-    char *ptr;
-
-    /*
-     * parse_uri의 목적:
-     *
-     * 클라이언트가 요청한 URI를 Tiny 서버가 실제로 사용할 수 있는 정보로 바꾼다.
-     *
-     * 정적 요청 예:
-     *   uri      = "/home.html"
-     *   filename = "./home.html"
-     *   cgiargs  = ""
-     *   return   = 1
-     *
-     * 동적 요청 예:
-     *   uri      = "/cgi-bin/adder?1&2"
-     *   filename = "./cgi-bin/adder"
-     *   cgiargs  = "1&2"
-     *   return   = 0
-     *
-     * 반환값:
-     *   1 -> 정적 파일 요청
-     *   0 -> 동적 CGI 요청
-     */
-
-    /*
-     * 미리 선언된 변수:
-     *
-     *   ptr:
-     *     URI 안에서 '?' 위치를 찾을 때 사용할 포인터
-     */
-
-    /*
-     * TODO 1. uri 안에 "cgi-bin"이 있는지 확인한다.
-     *
-     * 힌트:
-     *   strstr(uri, "cgi-bin")
-     *
-     * "cgi-bin"이 없으면 정적 파일 요청이다.
-     * "cgi-bin"이 있으면 동적 CGI 요청이다.
-     */
-    if(strstr(uri,"cgi-bin")==NULL)
-    /*
-     * TODO 2. 정적 파일 요청 처리
-     *
-     * 해야 할 일:
-     *   1. cgiargs를 빈 문자열로 만든다.
-     *      힌트: strcpy(cgiargs, "");
-     *
-     *   2. filename이 "."으로 시작하게 만든다.
-     *      예: uri "/home.html" -> filename "./home.html"
-     *
-     *   3. uri가 "/"로 끝나면 기본 파일 "home.html"을 붙인다.
-     *      예: uri "/" -> filename "./home.html"
-     *
-     *   4. 정적 요청이므로 1을 return한다.
-     */
+    char igzist,*ptr=&igzist;
+    if(strstr(uri,"cgi-bin")==NULL)strcpy(cgiargs,"");
+    else
     {
-        strcpy(cgiargs,"");
-        strcpy(filename,".");
-        strcat(filename,uri);
-        if(uri[strlen(uri)-1]=='/')strcat(filename,"home.html");
-        return 1;
-    }
-    /*
-     * TODO 3. 동적 CGI 요청 처리
-     *
-     * 해야 할 일:
-     *   1. uri 안에서 '?' 위치를 찾는다.
-     *      힌트: ptr = index(uri, '?');
-     *
-     *   2. '?'가 있으면:
-     *      - '?' 뒤쪽 문자열을 cgiargs에 복사한다.
-     *      - '?' 자리를 '\0'으로 바꿔서 uri를 filename 부분까지만 남긴다.
-     *
-     *      예:
-     *        uri = "/cgi-bin/adder?1&2"
-     *        cgiargs = "1&2"
-     *        uri = "/cgi-bin/adder"
-     *
-     *   3. '?'가 없으면:
-     *      - cgiargs를 빈 문자열로 만든다.
-     *
-     *   4. filename이 "."으로 시작하게 만든다.
-     *      예: uri "/cgi-bin/adder" -> filename "./cgi-bin/adder"
-     *
-     *   5. 동적 요청이므로 0을 return한다.
-     */
-    else{
         ptr=strchr(uri,'?');
         if(ptr){
             strcpy(cgiargs,ptr+1);
             *ptr = '\0';
         }
         else strcpy(cgiargs,"");
-        strcpy(filename,".");
-        strcat(filename,uri);
-        return 0;
     }
-    /*
-     * TODO 4. 모든 분기에서 return이 있어야 한다.
-     *
-     * 컴파일 경고를 피하려면 정적/동적 분기 안에서 반드시 return하자.
-     */
+    strcpy(filename,".");
+    strcat(filename,uri);
+    if(ptr==&igzist){
+        if(uri[strlen(uri)-1]=='/')strcat(filename,"home.html");
+        return 1;
+    }
+    else return 0;
 }
 
 void serve_static(int fd, char *filename, int filesize)
@@ -500,7 +415,7 @@ void serve_static(int fd, char *filename, int filesize)
      * 힌트:
      *   get_filetype(filename, filetype);
      */
-
+    get_filetype(filename,filetype);
     /*
      * TODO 2. HTTP response header를 만든다.
      *
@@ -514,6 +429,12 @@ void serve_static(int fd, char *filename, int filesize)
      *
      * header와 body 사이에는 반드시 빈 줄 "\r\n"이 있어야 한다.
      */
+    sprintf(buf,"HTTP/1.0 200 OK\r\n"
+        "Server: Tiny Web Server\r\n"
+        "Connection: close\r\n"
+        "Content-length: %d\r\n"
+        "Content-type: %s\r\n"
+        "\r\n",filesize,filetype);
 
     /*
      * TODO 3. 만든 header를 fd로 보낸다.
@@ -523,7 +444,7 @@ void serve_static(int fd, char *filename, int filesize)
      *
      * 여기서 fd는 클라이언트와 연결된 connfd다.
      */
-
+    Rio_writen(fd,buf,strlen(buf));
     /*
      * TODO 4. 정적 파일을 연다.
      *
@@ -532,7 +453,7 @@ void serve_static(int fd, char *filename, int filesize)
      *
      * O_RDONLY는 읽기 전용으로 파일을 열겠다는 뜻이다.
      */
-
+    srcfd = Open(filename, O_RDONLY, 0);
     /*
      * TODO 5. 파일 내용을 메모리에 매핑한다.
      *
@@ -542,7 +463,7 @@ void serve_static(int fd, char *filename, int filesize)
      * 의미:
      *   파일 내용을 srcp가 가리키는 메모리 영역처럼 다룰 수 있게 한다.
      */
-
+    srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
     /*
      * TODO 6. 파일 fd는 더 이상 필요 없으므로 닫는다.
      *
@@ -551,7 +472,7 @@ void serve_static(int fd, char *filename, int filesize)
      *
      * mmap을 했다면 파일 fd를 닫아도 매핑된 메모리 srcp는 아직 사용할 수 있다.
      */
-
+    Close(srcfd);
     /*
      * TODO 7. 파일 내용을 클라이언트에게 보낸다.
      *
@@ -562,13 +483,14 @@ void serve_static(int fd, char *filename, int filesize)
      * 이미지 같은 바이너리 파일은 중간에 '\0' 바이트가 있을 수 있기 때문이다.
      * 파일 크기인 filesize만큼 정확히 보내야 한다.
      */
-
+    Rio_writen(fd, srcp, filesize);
     /*
      * TODO 8. 매핑한 메모리를 해제한다.
      *
      * 힌트:
      *   Munmap(srcp, filesize);
      */
+    Munmap(srcp, filesize);
 }
 
 void get_filetype(char *filename, char *filetype)
