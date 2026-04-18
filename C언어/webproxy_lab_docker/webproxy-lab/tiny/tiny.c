@@ -520,31 +520,32 @@ void get_filetype(char *filename, char *filetype)
      * 있으면:
      *   strcpy(filetype, "text/html");
      */
-
+    if(strstr(filename,".html"))strcpy(filetype,"text/html");
     /*
      * TODO 2. ".gif"이면 "image/gif"로 설정한다.
      */
-
+    else if(strstr(filename,".gif"))strcpy(filetype,"image/gif");
     /*
      * TODO 3. ".png"이면 "image/png"로 설정한다.
      */
-
+    else if(strstr(filename,".png"))strcpy(filetype,"image/png");
     /*
      * TODO 4. ".jpg"이면 "image/jpeg"로 설정한다.
      *
      * 필요하면 ".jpeg"도 같이 처리할 수 있다.
      */
-
+    else if(strstr(filename, ".jpg") || strstr(filename,".jpeg"))strcpy(filetype,"image/jpeg");
     /*
      * TODO 5. ".mp4"이면 "video/mp4"로 설정한다.
      */
-
+    else if(strstr(filename,".mp4"))strcpy(filetype,"video/mp4");
     /*
      * TODO 6. 위 확장자에 해당하지 않으면 기본값을 넣는다.
      *
      * 힌트:
      *   strcpy(filetype, "text/plain");
      */
+    else strcpy(filetype, "text/plain");
 }
 
 void serve_dynamic(int fd, char *filename, char *cgiargs)
@@ -598,7 +599,10 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
      *   sprintf(buf, "Server: Tiny Web Server\r\n");
      *   Rio_writen(fd, buf, strlen(buf));
      */
-
+    sprintf(buf,"HTTP/1.0 200 OK\r\n"
+        "Server: Tiny Web Server\r\n"
+    );
+    Rio_writen(fd, buf, strlen(buf));
     /*
      * TODO 2. Fork로 자식 프로세스를 만든다.
      *
@@ -613,7 +617,13 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
      * 자식 프로세스:
      *   CGI 프로그램을 실행한다.
      */
-
+    if(Fork()==0)
+    {
+        setenv("QUERY_STRING", cgiargs, 1);
+        Dup2(fd, STDOUT_FILENO);
+        Execve(filename, emptylist, environ);
+    }
+    Wait(NULL);
     /*
      * TODO 3. 자식 프로세스 안에서 QUERY_STRING 환경변수를 설정한다.
      *
