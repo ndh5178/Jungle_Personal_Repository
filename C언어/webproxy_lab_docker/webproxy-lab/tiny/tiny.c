@@ -311,6 +311,13 @@ void read_requesthdrs(rio_t *rp)
      * rp는 이미 doit에서 Rio_readinitb가 끝난 rio 구조체의 주소다.
      * 그래서 여기서는 다시 Rio_readinitb를 하지 않는다.
      */
+    Rio_readlineb(rp, buf, MAXLINE);
+    while (strcmp(buf, "\r\n"))
+    {
+        printf("%s",buf);
+        Rio_readlineb(rp, buf, MAXLINE);
+    }
+    
 
     /*
      * TODO 2. 빈 줄 "\r\n"이 나올 때까지 반복해서 읽는다.
@@ -383,7 +390,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
      * "cgi-bin"이 없으면 정적 파일 요청이다.
      * "cgi-bin"이 있으면 동적 CGI 요청이다.
      */
-
+    if(strstr(uri,"cgi-bin")==NULL)
     /*
      * TODO 2. 정적 파일 요청 처리
      *
@@ -399,7 +406,13 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
      *
      *   4. 정적 요청이므로 1을 return한다.
      */
-
+    {
+        strcpy(cgiargs,"");
+        strcpy(filename,".");
+        strcat(filename,uri);
+        if(uri[strlen(uri)-1]=='/')strcat(filename,"home.html");
+        return 1;
+    }
     /*
      * TODO 3. 동적 CGI 요청 처리
      *
@@ -424,7 +437,17 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
      *
      *   5. 동적 요청이므로 0을 return한다.
      */
-
+    else{
+        ptr=strchr(uri,'?');
+        if(ptr){
+            strcpy(cgiargs,ptr+1);
+            *ptr = '\0';
+        }
+        else strcpy(cgiargs,"");
+        strcpy(filename,".");
+        strcat(filename,uri);
+        return 0;
+    }
     /*
      * TODO 4. 모든 분기에서 return이 있어야 한다.
      *
