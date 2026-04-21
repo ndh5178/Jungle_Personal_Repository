@@ -58,8 +58,9 @@ int main(int argc, char **argv)
     fprintf(stderr, "usage: %s <port>\n", argv[0]);
     exit(1);
   }
-
+  
   listenfd = Open_listenfd(argv[1]);
+  printf("Welcome Tiny \n");
   while (1)
   {
     clientlen = sizeof(clientaddr);
