@@ -11,15 +11,16 @@ static const char *user_agent_hdr =
 
 void doit(int connectfd);
 void parse_uri(char *uri, char *host, char *port, char *path);
-void build_http_header(char *http_header, char *host, char *port, char *path,
-                       rio_t *client_rio);
+void build_http_header(char *http_header, char *host, char *port, char *path, rio_t *client_rio);
+void *thread(void *vargp);
 
 int main(int argc, char **argv)
 {
-  int listenfd,connectfd;
+  int listenfd,*connectfd;
   char hostname[MAXLINE], port[MAXLINE];
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
+  pthread_t tid;
   if(argc!=2){
     fprintf(stderr, "usage: %s <port>\n", argv[0]);
     exit(1);
@@ -29,14 +30,26 @@ int main(int argc, char **argv)
   while (1)
   {
     clientlen = sizeof(clientaddr);
-    connectfd=Accept(listenfd, (SA *)&clientaddr,&clientlen);
+    connectfd = Malloc(sizeof(int));
+    *connectfd=Accept(listenfd, (SA *)&clientaddr,&clientlen);
     Getnameinfo((SA *)&clientaddr, clientlen, &hostname[0], MAXLINE, &port[0], MAXLINE,0);
     printf("Accepted connection from (%s, %s)\n", hostname, port);
-    doit(connectfd);
-    printf("Closeed connection from (%s, %s)\n", hostname, port);
-    Close(connectfd);
+    Pthread_create(&tid, NULL, thread, connectfd);
   }
   return 0;
+}
+
+void *thread(void *vargp)
+{
+    int connectfd = *((int *)vargp);
+
+    Pthread_detach(pthread_self());
+    Free(vargp);
+
+    doit(connectfd);
+    Close(connectfd);
+
+    return NULL;
 }
 
 void doit(int connectfd)
