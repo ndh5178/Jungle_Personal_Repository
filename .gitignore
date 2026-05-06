@@ -94,3 +94,6 @@ dmypy.json
 *.swo
 *~
 
+# Local study notes
+*.md
+*.test_status
