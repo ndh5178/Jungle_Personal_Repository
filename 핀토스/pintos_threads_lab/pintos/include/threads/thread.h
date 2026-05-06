@@ -5,6 +5,8 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/interrupt.h"
+#include "threads/synch.h"
+#include "filesys/file.h"
 #ifdef VM
 #include "vm/vm.h"
 #endif
@@ -24,9 +26,10 @@ typedef int tid_t;
 #define TID_ERROR ((tid_t) -1)          /* Error value for tid_t. */
 
 /* Thread priorities. */
-#define PRI_MIN 0                       /* Lowest priority. */
-#define PRI_DEFAULT 31                  /* Default priority. */
-#define PRI_MAX 63                      /* Highest priority. */
+#define PRI_MIN 0        /* Lowest priority. */
+#define PRI_DEFAULT 31   /* Default priority. */
+#define PRI_MAX 63       /* Highest priority. */
+#define FD_MAX 64      /* 프로세스당 열 수 있는 파일 최대 개수 */
 
 /* A kernel thread or user process.
  *
@@ -85,19 +88,41 @@ typedef int tid_t;
  * only because they are mutually exclusive: only a thread in the
  * ready state is on the run queue, whereas only a thread in the
  * blocked state is on a semaphore wait list. */
+#ifdef USERPROG
+struct child_info {
+	tid_t tid;
+	int exit_status;
+	bool exited;
+	bool waited;
+	bool load_success;
+	struct semaphore load_sema;
+	struct thread *parent;
+	struct list_elem elem;
+};
+#endif
+struct lock;
+
 struct thread {
 	/* Owned by thread.c. */
 	tid_t tid;                          /* Thread identifier. */
 	enum thread_status status;          /* Thread state. */
 	char name[16];                      /* Name (for debugging purposes). */
 	int priority;                       /* Priority. */
-
+	int64_t wakeup_tick;
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem;              /* List element. */
-
+	int base_priority;             /* Donation 전 원래 priority. */
+	struct lock *waiting_lock;     /* 현재 기다리는 lock. */
+	struct list donations;         /* 나에게 donation한 thread 목록. */
+	struct list_elem donation_elem;
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
-	uint64_t *pml4;                     /* Page map level 4 */
+	uint64_t *pml4;                 /* Page map level 4 */
+    struct file *fd_table[FD_MAX];  /*fd 번호 → struct file * 매핑 */
+
+	struct list children;
+	struct semaphore child_wait_sema;
+	struct child_info *child_info;
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */
@@ -142,5 +167,6 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 void do_iret (struct intr_frame *tf);
+void thread_update_priority (struct thread *, int);
 
 #endif /* threads/thread.h */
