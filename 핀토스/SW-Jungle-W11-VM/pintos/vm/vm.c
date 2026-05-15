@@ -234,7 +234,17 @@ supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 
 /* Free the resource hold by the supplemental page table */
 void
-supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
-	/* TODO: Destroy all the supplemental_page_table hold by thread and
-	 * TODO: writeback all the modified contents to the storage. */
+supplemental_page_table_kill (struct supplemental_page_table *spt) {
+	struct hash *h=&spt->pages;
+
+	for (size_t i = 0; i < h->bucket_cnt; i++) {
+		while (!list_empty (&h->buckets[i])) {
+			struct list_elem *front_list = list_pop_front (&h->buckets[i]);
+			struct hash_elem *front_hash = list_elem_to_hash_elem (front_list);
+			struct page *page = hash_entry (front_hash, struct page, hash_elem);
+			destroy (page);
+			free (page);
+		}
+	}
+	free (h->buckets);
 }
