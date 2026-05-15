@@ -41,7 +41,7 @@ static tid_t syscall_spawn (const char *cmdline);
 
 static void check_address (const void *uaddr);
 static void check_string (const char *str);
-static void check_buffer (const void *buffer, unsigned size);
+static void check_buffer (const void *buffer, unsigned size, bool writable);
 
 /* System call.
  *
@@ -258,7 +258,7 @@ syscall_filesize (int fd) {
 
 static int
 syscall_read (int fd , void *buffer , unsigned size ) {
-	check_buffer(buffer, size);
+	check_buffer(buffer, size, true);
 	if(fd == 0) {
 		int read_size = 0;
 
@@ -285,7 +285,7 @@ syscall_read (int fd , void *buffer , unsigned size ) {
 
 static int
 syscall_write (int fd, const void *buffer, unsigned size) {
-	check_buffer(buffer, size);
+	check_buffer(buffer, size, false);
 	if(fd == 0) {
 		return -1;
 	}
@@ -352,26 +352,54 @@ syscall_spawn (const char *cmdline) {
 
 static void
 check_address (const void *uaddr) {
-	if (uaddr == NULL || !is_user_vaddr (uaddr) || pml4_get_page (thread_current ()->pml4, uaddr) == NULL) {
-		syscall_exit (-1);
-	}
+	struct supplemental_page_table *spt = &thread_current()->spt;
+	struct page *page;
+
+	if(uaddr == NULL || !is_user_vaddr(uaddr))syscall_exit (-1);
+
+	if (pml4_get_page (thread_current ()->pml4, uaddr) != NULL)return;
+
+	page=spt_find_page(spt,uaddr);
+	if(page == NULL)syscall_exit (-1);
+
+	if(!vm_do_claim_page (page))syscall_exit(-1);
 }
 
 static void
 check_string (const char *str) {
-	check_address (str);
+	void *page;
 
+	check_address (str);
+	page = pg_round_down (str);
+	
 	while (*str != '\0') {
 		str++;
-		check_address (str);
+		if (pg_round_down (str) != page) {
+			page = pg_round_down (str);
+			check_address (str);
+		}
 	}
 }
 
 static void
-check_buffer (const void *buffer, unsigned size) {
-	const char *buf = buffer;
+check_buffer (const void *buffer, unsigned size, bool writable) {
+	const char *start = buffer;
+	const char *end;
+	const char *page_addr;
+	struct supplemental_page_table *spt = &thread_current()->spt;
+	struct page *page;
 
-	for (unsigned i = 0; i < size; i++) {
-		check_address (buf + i);
+	if (size == 0)
+		return;
+
+	end = start + size - 1;
+
+	for (page_addr = pg_round_down (start); page_addr <= (const char *) pg_round_down (end); page_addr += PGSIZE) {
+		check_address (page_addr);
+
+		if (writable){
+			page = spt_find_page (spt, page_addr);
+			if (page->writable == false)syscall_exit (-1);
+		}
 	}
 }
