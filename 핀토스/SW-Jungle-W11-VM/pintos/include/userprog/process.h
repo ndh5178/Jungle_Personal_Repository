@@ -2,6 +2,10 @@
 #define USERPROG_PROCESS_H
 
 #include "threads/thread.h"
+#include <stddef.h>
+#include "filesys/off_t.h"
+
+struct file;
 
 struct lazy_load_aux {
     struct file *file;

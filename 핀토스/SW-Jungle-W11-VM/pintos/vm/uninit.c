@@ -65,8 +65,7 @@ uninit_initialize (struct page *page, void *kva) {
  * PAGE will be freed by the caller. */
 static void
 uninit_destroy (struct page *page) {
-	struct uninit_page *uninit = &page->uninit;
-	struct lazy_load_aux *aux = uninit->aux;
+	struct lazy_load_aux *aux = page->uninit.aux;
 
 	if(aux != NULL){
 		file_close(aux->file);
