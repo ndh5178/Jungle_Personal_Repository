@@ -247,43 +247,38 @@ supplemental_page_table_copy (struct supplemental_page_table *child, struct supp
 		for(front_list = list_begin(parent_buckets);front_list!=list_end(parent_buckets);front_list=list_next(front_list)){
 			front_hash = list_elem_to_hash_elem (front_list);
 			page = hash_entry (front_hash, struct page, hash_elem);
-			switch (page->operations->type) {
-				case VM_UNINIT:{
-					struct lazy_load_aux *parent_aux = page->uninit.aux;
-					struct lazy_load_aux *child_aux = malloc (sizeof (struct lazy_load_aux));
 
-					if (child_aux == NULL)return false;
+			if(page->operations->type == VM_UNINIT){
+				struct lazy_load_aux *parent_aux = page->uninit.aux;
+				struct lazy_load_aux *child_aux = malloc (sizeof (struct lazy_load_aux));
 
-					child_aux->file = file_reopen (parent_aux->file);
-					if (child_aux->file == NULL) {
-						free (child_aux);
-						return false;
-					}
+				if (child_aux == NULL)return false;
 
-					child_aux->ofs = parent_aux->ofs;
-					child_aux->page_read_bytes = parent_aux->page_read_bytes;
-					child_aux->page_zero_bytes = parent_aux->page_zero_bytes;
-
-					if (!vm_alloc_page_with_initializer (page->uninit.type,page->va,page->writable,page->uninit.init,child_aux)){
-						file_close (child_aux->file);
-						free (child_aux);
-						return false;
-					}
-					break;
+				child_aux->file = file_reopen (parent_aux->file);
+				if (child_aux->file == NULL) {
+					free (child_aux);
+					return false;
 				}
-				case VM_ANON:{
-					if (!vm_alloc_page_with_initializer (page->operations->type, page->va, page->writable,NULL,NULL))return false;
 
-					if (!vm_claim_page(page->va))return false;
+				child_aux->ofs = parent_aux->ofs;
+				child_aux->page_read_bytes = parent_aux->page_read_bytes;
+				child_aux->page_zero_bytes = parent_aux->page_zero_bytes;
 
-					struct page *child_page = spt_find_page (child, page->va);
-					if (child_page == NULL)return false;
-
-					memcpy (child_page->frame->kva, page->frame->kva, PGSIZE);
-					break;					
+				if (!vm_alloc_page_with_initializer (page->uninit.type,page->va,page->writable,page->uninit.init,child_aux)){
+					file_close (child_aux->file);
+					free (child_aux);
+					return false;
 				}
-				case VM_FILE:
-					break;
+			}
+			else if(page->operations->type == VM_ANON){
+				if (!vm_alloc_page_with_initializer (page->operations->type, page->va, page->writable,NULL,NULL))return false;
+
+				if (!vm_claim_page(page->va))return false;
+
+				struct page *child_page = spt_find_page (child, page->va);
+				if (child_page == NULL)return false;
+
+				memcpy (child_page->frame->kva, page->frame->kva, PGSIZE);
 			}
 		}
 	}
