@@ -18,6 +18,8 @@
 #include "filesys/file.h"  
 #include "filesys/filesys.h" 
 
+#include "vm/vm.h"
+
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
 static void syscall_exit (int status);
@@ -352,17 +354,11 @@ syscall_spawn (const char *cmdline) {
 
 static void
 check_address (const void *uaddr) {
-	struct supplemental_page_table *spt = &thread_current()->spt;
-	struct page *page;
-
 	if(uaddr == NULL || !is_user_vaddr(uaddr))syscall_exit (-1);
 
 	if (pml4_get_page (thread_current ()->pml4, uaddr) != NULL)return;
 
-	page=spt_find_page(spt,uaddr);
-	if(page == NULL)syscall_exit (-1);
-
-	if(!vm_do_claim_page (page))syscall_exit(-1);
+	if(!vm_claim_page(uaddr))syscall_exit(-1);
 }
 
 static void
