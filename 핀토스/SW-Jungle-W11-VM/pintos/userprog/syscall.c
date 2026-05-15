@@ -18,7 +18,9 @@
 #include "filesys/file.h"  
 #include "filesys/filesys.h" 
 
+#ifdef VM
 #include "vm/vm.h"
+#endif
 
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
@@ -355,10 +357,13 @@ syscall_spawn (const char *cmdline) {
 static void
 check_address (const void *uaddr) {
 	if(uaddr == NULL || !is_user_vaddr(uaddr))syscall_exit (-1);
-
+#ifdef VM
 	if (pml4_get_page (thread_current ()->pml4, uaddr) != NULL)return;
 
 	if(!vm_claim_page(uaddr))syscall_exit(-1);
+#else
+	if (pml4_get_page (thread_current ()->pml4, uaddr) == NULL)syscall_exit (-1);
+#endif
 }
 
 static void
@@ -382,8 +387,11 @@ check_buffer (const void *buffer, unsigned size, bool writable) {
 	const char *start = buffer;
 	const char *end;
 	const char *page_addr;
+
+#ifdef VM
 	struct supplemental_page_table *spt = &thread_current()->spt;
 	struct page *page;
+#endif
 
 	if (size == 0)
 		return;
@@ -392,10 +400,12 @@ check_buffer (const void *buffer, unsigned size, bool writable) {
 
 	for (page_addr = pg_round_down (start); page_addr <= (const char *) pg_round_down (end); page_addr += PGSIZE) {
 		check_address (page_addr);
-
+		
+#ifdef VM
 		if (writable){
 			page = spt_find_page (spt, page_addr);
 			if (page->writable == false)syscall_exit (-1);
 		}
+#endif
 	}
 }

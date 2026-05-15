@@ -6,14 +6,14 @@
 #include "filesys/off_t.h"
 
 struct file;
-
+#ifdef VM
 struct lazy_load_aux {
     struct file *file;
     off_t ofs;
     size_t page_read_bytes;
     size_t page_zero_bytes;
 };
-
+#endif
 tid_t process_create_initd (const char *file_name);
 tid_t process_fork (const char *name, struct intr_frame *if_);
 int process_exec (void *f_name);
