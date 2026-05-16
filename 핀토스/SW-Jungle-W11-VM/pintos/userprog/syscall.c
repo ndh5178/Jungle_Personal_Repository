@@ -76,6 +76,9 @@ syscall_init (void) {
 /* The main system call interface */
 void
 syscall_handler (struct intr_frame *f) {
+#ifdef VM
+	thread_current()->user_rsp = f->rsp;
+#endif
 	switch (f->R.rax) {
 		case SYS_HALT:
 			syscall_halt ();
@@ -360,7 +363,12 @@ check_address (const void *uaddr) {
 #ifdef VM
 	if (pml4_get_page (thread_current ()->pml4, uaddr) != NULL)return;
 
-	if(!vm_claim_page(uaddr))syscall_exit(-1);
+	if(!vm_claim_page(uaddr)){
+		if(uaddr>=thread_current()->user_rsp && uaddr<USER_STACK && uaddr >= (void *) ((uint8_t *) USER_STACK - STACK_MAX)){
+			 if(vm_stack_growth((void *)uaddr))return; 
+		}
+		syscall_exit(-1);
+	}
 #else
 	if (pml4_get_page (thread_current ()->pml4, uaddr) == NULL)syscall_exit (-1);
 #endif

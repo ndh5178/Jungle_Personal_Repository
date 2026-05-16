@@ -82,7 +82,7 @@ struct page_operations {
 #define swap_out(page) (page)->operations->swap_out (page)
 #define destroy(page) \
 	if ((page)->operations->destroy) (page)->operations->destroy (page)
-
+#define STACK_MAX (1 << 20)
 /* Representation of current process's memory space.
  * We don't want to force you to obey any specific design for this struct.
  * All designs up to you for this. */
@@ -111,5 +111,6 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage,
 void vm_dealloc_page (struct page *page);
 bool vm_claim_page (void *va);
 enum vm_type page_get_type (struct page *page);
+bool vm_stack_growth (void *addr);
 
 #endif  /* VM_VM_H */
