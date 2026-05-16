@@ -926,12 +926,10 @@ setup_stack (struct intr_frame *if_) {
 	bool success = false;
 	void *stack_bottom = (void *) (((uint8_t *) USER_STACK) - PGSIZE);
 
-    if (vm_alloc_page (VM_ANON, stack_bottom, true)
-        && vm_claim_page (stack_bottom)) {
+    if (vm_alloc_page (VM_ANON, stack_bottom, true) && vm_claim_page (stack_bottom)){
         if_->rsp = USER_STACK;
         success = true;
     }
-
 	return success;
 }
 #endif /* VM */

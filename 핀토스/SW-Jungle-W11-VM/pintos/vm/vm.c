@@ -73,7 +73,7 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 		else if(VM_TYPE(type)==VM_FILE) initializer = file_backed_initializer;
 		else goto err;
 
-		struct page *page = malloc (sizeof *page);
+		struct page *page = malloc (sizeof(struct page));
 		if (page == NULL)goto err;
 
 		uninit_new (page, upage, init, type, aux, initializer);
