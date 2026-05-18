@@ -10,9 +10,14 @@
 #include <string.h>
 #include <list.h>
 #include <hash.h>
+#include "threads/synch.h"
 
 #define list_elem_to_hash_elem(LIST_ELEM)                       \
 	list_entry(LIST_ELEM, struct hash_elem, list_elem)
+
+static struct list frame_list;
+static struct lock frame_list_lock;
+
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 void
@@ -25,6 +30,8 @@ vm_init (void) {
 	register_inspect_intr ();
 	/* DO NOT MODIFY UPPER LINES. */
 	/* TODO: Your code goes here. */
+	list_init (&frame_list);
+	lock_init (&frame_list_lock);
 }
 
 /* Get the type of the page. This function is useful if you want to know the
@@ -78,6 +85,7 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 
 		uninit_new (page, upage, init, type, aux, initializer);
 		page->writable=writable;
+		page->pml4 = thread_current ()->pml4;
 
 		if(spt_insert_page (spt, page))return true;
 		else free(page);
@@ -117,7 +125,16 @@ spt_remove_page (struct supplemental_page_table *spt, struct page *page) {
 static struct frame *
 vm_get_victim (void) {
 	struct frame *victim = NULL;
-	 /* TODO: The policy for eviction is up to you. */
+	struct list_elem *e;
+
+    lock_acquire (&frame_list_lock);
+
+    if (!list_empty (&frame_list)) {
+        e = list_begin (&frame_list);
+        victim = list_entry (e, struct frame, frame_elem);
+    }
+
+    lock_release (&frame_list_lock);
 
 	return victim;
 }
@@ -126,10 +143,18 @@ vm_get_victim (void) {
  * Return NULL on error.*/
 static struct frame *
 vm_evict_frame (void) {
-	struct frame *victim UNUSED = vm_get_victim ();
-	/* TODO: swap out the victim and return the evicted frame. */
+	struct frame *victim = vm_get_victim ();
 
-	return NULL;
+    if (victim == NULL || victim->page == NULL)return NULL;
+
+    if (!swap_out (victim->page))return NULL;
+
+    pml4_clear_page (victim->page->pml4, victim->page->va);
+
+    victim->page->frame = NULL;
+    victim->page = NULL;
+
+    return victim;
 }
 
 /* palloc() and get frame. If there is no available page, evict the page
@@ -138,16 +163,25 @@ vm_evict_frame (void) {
  * space.*/
 static struct frame *
 vm_get_frame (void) {
-	struct frame *frame=malloc(sizeof (struct frame));
-	if (frame == NULL)return NULL;
+	struct frame *frame=NULL;
 	void *kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-    if (kpage == NULL) {
-        free (frame);
-        return NULL;
-    }
+    if (kpage == NULL){
+		frame=vm_evict_frame();
+		return frame;
+	}
+	
+	frame=malloc(sizeof (struct frame));
+	if (frame == NULL){
+		palloc_free_page (kpage);
+		return NULL;
+	}
 
 	frame->kva=kpage;
 	frame->page=NULL;
+
+	lock_acquire(&frame_list_lock);
+	list_push_back(&frame_list,&frame->frame_elem);
+	lock_release(&frame_list_lock);
 
 	ASSERT (frame->page == NULL);
 	return frame;
@@ -221,10 +255,10 @@ vm_do_claim_page (struct page *page) {
 	frame->page = page;
 	page->frame = frame;
 
-	if(pml4_set_page(thread_current()->pml4, page->va, frame->kva, page->writable)){
+	if(pml4_set_page(page->pml4, page->va, frame->kva, page->writable)){
 		if(!swap_in (page, frame->kva)){
 			page->frame = NULL;
-			pml4_clear_page (thread_current ()->pml4, page->va);
+			pml4_clear_page (page->pml4, page->va);
 			palloc_free_page(frame->kva);
 			free(frame);
 			return false;			
